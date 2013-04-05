@@ -29,6 +29,7 @@ int DBFile::Create(char *f_path, fType f_type, void *startup) {
     
     int ret;
 
+    //crete either heap, sorted or Btree file
     if (f_type == heap)
     {
         myInternalVar = new HeapDBFile();
@@ -36,11 +37,10 @@ int DBFile::Create(char *f_path, fType f_type, void *startup) {
     else if (f_type = sorted)
     {
         myInternalVar = new SortedDBFile();
-        cout<<"\ncreated softed file object";
     }
     else
     {
-        
+        // code for B tree file
     }
         
     ret = myInternalVar->Create(f_path,f_type,startup);
@@ -51,7 +51,6 @@ int DBFile::Create(char *f_path, fType f_type, void *startup) {
         exit(0);
     }
     
-    cout<<"\nDBFile: the file is created";
     return 1;
 }
 
@@ -66,22 +65,23 @@ int DBFile::Open(char *f_path) {
     fType f_type;
     Meta fileInfo;
     
-    //Create the MetaFileName
+    //Create the MetaFileName string
     char *metaFileName;
     metaFileName = (char *) malloc(strlen(f_path) + 6);
     strcpy(metaFileName, f_path);
     strcat(metaFileName, ".info");
 
+    //extract the file information from the medaFile
     ifstream metaFile(metaFileName, ios::binary);
     metaFile.read((char *) &fileInfo, sizeof (fileInfo));
     metaFile.close();
     
+    //save the file type
     f_type = fileInfo.fileType;
 
     if (f_type == heap)
     {
         myInternalVar = new HeapDBFile();
-        cout<<"\ncreated a heap file object";
     }
     else if (f_type == sorted)
     {
@@ -89,7 +89,7 @@ int DBFile::Open(char *f_path) {
     }
     else
     {
-        
+        //code to create Btree file object
     }
     
     int ret;
@@ -100,7 +100,7 @@ int DBFile::Open(char *f_path) {
         exit(0);
     }
     
-    
+    return ret;
     
 }
 
@@ -111,23 +111,26 @@ void DBFile::MoveFirst() {
 }
 
 int DBFile::Close() {
-    cout<<"\nDBFile: closing file";
-
-    myInternalVar->Close();
+    
+    int ret;
+    
+    ret = myInternalVar->Close();
     
     delete myInternalVar;
     
-    return 1;
+    return ret;
 }
 
 void DBFile::Add(Record &rec) {
     
     myInternalVar->Add(rec);
-    
+
 }
 
 int DBFile::GetNext(Record &fetchme) {
-    myInternalVar->GetNext(fetchme);
+
+    return myInternalVar->GetNext(fetchme);
+
 }
 
 int DBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
