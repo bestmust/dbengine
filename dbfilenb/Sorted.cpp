@@ -364,19 +364,19 @@ void SortedDBFile::WriteOut() {
   //  diskFile.Open(1, filePath);
     
     Page outPage;
-    writePage1.EmptyItOut();
+    //writePage1.EmptyItOut();
     
     writePage = 0;
     
     while(output->Remove(&rec))
     {
-        if(writePage1.Append(&rec)==0) {
+        if(outPage.Append(&rec)==0) {
 
-		diskFile.AddPage(&writePage1,writePage);
+		diskFile.AddPage(&outPage,writePage);
             
-            writePage1.EmptyItOut();
+            outPage.EmptyItOut();
             
-            writePage1.Append(&rec);
+            outPage.Append(&rec);
             
             writePage = writePage + 1;
             
@@ -386,7 +386,7 @@ void SortedDBFile::WriteOut() {
         
     }
     
-    diskFile.AddPage(&writePage1,writePage);
+    diskFile.AddPage(&outPage,writePage);
     
         numPages = diskFile.GetLength();
         //writePage = numPages;
