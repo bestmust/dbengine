@@ -30,7 +30,9 @@ SortedDBFile::SortedDBFile() {
     fileMode= reading;
     
     mySortInfo = new SortInfo();
-    mySortInfo->myOrder = new OrderMaker();
+    //mySortInfo->myOrder = new OrderMaker();
+    
+    curPage = 0;
 }
 
 int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
@@ -103,7 +105,7 @@ int SortedDBFile::Open(char *f_path) {
     metaFile.read((char *) &o, sizeof (OrderMaker));
     metaFile.close();
     
-    mySortInfo->myOrder = &o;
+    //mySortInfo->myOrder = &o;
     
     cout<<mySortInfo->runLength;
     
@@ -116,8 +118,8 @@ int SortedDBFile::Open(char *f_path) {
     if (binFile == 0)
         return 0;
 
-    //Set the currently read record to zero
-    curRec = 0;
+    //Set the currently read Page to zero
+    curPage = 0;
     
     //open the file in the reading mode.
     fileMode = reading;
@@ -157,7 +159,7 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
         int length = mySortInfo->runLength;
         
         //initialize and create the BigQ thread.   
-        BigQarg arg = {*input,*output,*mySortInfo->myOrder,length};
+        BigQarg arg = {*input,*output,o,length};
         
         //now create the BigQ thread to sort the input.
         pthread_create(&BigQ_thread, NULL,BigQThread,(void *) &arg);
@@ -263,7 +265,7 @@ void SortedDBFile::MoveFirst() {
     
     if(fileMode == reading)
     {
-        if (curRec>0) {
+        if (diskFile.GetLength()>0) {
         
             //Reads the First Page into the File
         diskFile.GetPage(&inPage, 0);
@@ -361,12 +363,22 @@ int SortedDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 
 void SortedDBFile::WriteOut() {
     
+    diskFile.Close();
+    
    //merge with current file.
     DBFile sameFile;
     sameFile.Open(filePath);
     sameFile.MoveFirst();
     
     Record rec;
+    
+    int ret;
+    
+    ret = sameFile.GetNext(rec);
+    
+    cout<<"\nReturn Value is :"<<ret<<endl;
+    
+    //exit(1);
     
     while(sameFile.GetNext(rec))
     {
@@ -376,12 +388,14 @@ void SortedDBFile::WriteOut() {
     input->ShutDown();
     
     sameFile.Close(); 
+    
+    diskFile.Open(1, filePath);
 
     //Closing the File. Doing this will create a file of 0KB
-   // diskFile.Close();
+   // 
   // diskFile.Open(0, filePath);
   //  diskFile.Close();
-  //  diskFile.Open(1, filePath);
+  //  
     
     Page outPage;
     //writePage1.EmptyItOut();
