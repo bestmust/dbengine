@@ -28,10 +28,12 @@ SortedDBFile::SortedDBFile() {
     
     //let the file be in reading mode initially.
     fileMode= reading;
+    
+    mySortInfo = new SortInfo();
 }
 
 int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
-
+    
     //Create MetaFileName by appending .info to the binfile name given by f_path
     metaFileName = (char *) malloc(strlen(f_path) + 6);
     strcpy(metaFileName, f_path);
@@ -62,10 +64,17 @@ int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
     //Initializing the meta file info
     fileInfo.fileType = sorted;
 
+    SortInfo *temp = (SortInfo *)startup;
+    
+    //temp->myOrder->Print();
+    
+    //exit(0);
+    
     //Write out the meta Info File
     ofstream metaFile(metaFileName, ios::binary);
     metaFile.write((char*) &fileInfo, sizeof (fileInfo));
-    metaFile.write((char*) &startup, sizeof (SortInfo));
+    metaFile.write((char*) &temp->runLength, sizeof (int));
+    metaFile.write((char*) &temp->myOrder, sizeof (OrderMaker));
     metaFile.close();
 
     return 1;
@@ -85,11 +94,18 @@ int SortedDBFile::Open(char *f_path) {
     strcpy(metaFileName, f_path);
     strcat(metaFileName, ".info");
     
+    mySortInfo->myOrder = new OrderMaker();
+    
     //read the meta file contents
     ifstream metaFile(metaFileName, ios::binary);
     metaFile.read((char *) &fileInfo, sizeof (fileInfo));
-    metaFile.read((char *) &mySortInfo, sizeof (SortInfo));
+    metaFile.read((char *) &mySortInfo->runLength, sizeof (int));
+    metaFile.read((char *) &mySortInfo->myOrder, sizeof (OrderMaker));
     metaFile.close();
+    
+    //mySortInfo->myOrder->Print();
+    
+    //exit(0);
 
     //check if the file exists.
     ifstream binFile(f_path);
@@ -342,20 +358,20 @@ int SortedDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 void SortedDBFile::WriteOut() {
     
    //merge with current file.
-    DBFile sameFile;
-    sameFile.Open(filePath);
-    sameFile.MoveFirst();
+    //DBFile sameFile;
+    //sameFile.Open(this->filePath);
+    //sameFile.MoveFirst();
     
     Record rec;
     
-    while(sameFile.GetNext(rec))
-    {
-        input->Insert(&rec);
-    }
+    //while(sameFile.GetNext(rec))
+    //{
+  //      input->Insert(&rec);
+   // }
     
     input->ShutDown();
     
-    sameFile.Close(); 
+  //  sameFile.Close(); 
 
     //Closing the File. Doing this will create a file of 0KB
    // diskFile.Close();
