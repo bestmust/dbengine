@@ -341,43 +341,55 @@ int SortedDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 
 void SortedDBFile::WriteOut() {
     
-    input->ShutDown();
+   //merge with current file.
+    //DBFile sameFile;
+    //sameFile.Open(filePath);
+    //sameFile.MoveFirst();
     
     Record rec;
     
-    while(output->Remove(&rec))
-    {
-        //MDLog("Read In the Record ", NULL);
+    //while(sameFile.GetNext(rec))
+    //{
+  //      input->Insert(&rec);
+   // }
     
-    if (numPages > 0 && writePage == 0) {
-        MDLog("Read In the Page -", numPages);
-        diskFile.GetPage(&writePage1, numPages - 1);
-    }
+    input->ShutDown();
     
-    //Write the Record specified in the argument int othe last page
-    if (writePage1.Append(&rec) == 0) {
-        
-        diskFile.AddPage(&writePage1, numPages);
-        
+   // sameFile.Close(); 
+
+    //Closing the File. Doing this will create a file of 0KB
+   // diskFile.Close();
+  // diskFile.Open(0, filePath);
+  //  diskFile.Close();
+  //  diskFile.Open(1, filePath);
+    
+    Page outPage;
     writePage1.EmptyItOut();
     
-        writePage1.Append(&rec);
+    writePage = 0;
     
-        numPages = numPages + 1;
-        
-        MDLog("New Page is Created and added to file ", numPages);
+    while(output->Remove(&rec))
+    {
+        if(writePage1.Append(&rec)==0) {
+
+		diskFile.AddPage(&writePage1,writePage);
             
-    }
+            writePage1.EmptyItOut();
             
-    //Add this page to the file
-    
-    
-    //Close the diskFile
-    //    diskFile.Close();
-    writePage = numPages;
+            writePage1.Append(&rec);
+            
+            writePage = writePage + 1;
+            
+             MDLog("New Page is Created and added to file ", writePage);
             
         }
-    diskFile.AddPage(&writePage1, numPages);
+        
+    }
+    
+    diskFile.AddPage(&writePage1,writePage);
+    
+        numPages = diskFile.GetLength();
+        //writePage = numPages;
         //shutdown the output pipe if everything is done.
         output->ShutDown();
         
