@@ -356,25 +356,28 @@ void SortedDBFile::WriteOut() {
     
     //Write the Record specified in the argument int othe last page
     if (writePage1.Append(&rec) == 0) {
-
+        
+        diskFile.AddPage(&writePage1, numPages);
+        
     writePage1.EmptyItOut();
     
         writePage1.Append(&rec);
     
         numPages = numPages + 1;
-            
+        
         MDLog("New Page is Created and added to file ", numPages);
             
     }
             
     //Add this page to the file
-    diskFile.AddPage(&writePage1, numPages);
-            
+    
+    
     //Close the diskFile
     //    diskFile.Close();
     writePage = numPages;
             
         }
+    diskFile.AddPage(&writePage1, numPages);
         //shutdown the output pipe if everything is done.
         output->ShutDown();
         
