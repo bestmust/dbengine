@@ -342,20 +342,20 @@ int SortedDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 void SortedDBFile::WriteOut() {
     
    //merge with current file.
-    //DBFile sameFile;
-    //sameFile.Open(filePath);
-    //sameFile.MoveFirst();
+    DBFile sameFile;
+    sameFile.Open(filePath);
+    sameFile.MoveFirst();
     
     Record rec;
     
-    //while(sameFile.GetNext(rec))
-    //{
-  //      input->Insert(&rec);
-   // }
+    while(sameFile.GetNext(rec))
+    {
+        input->Insert(&rec);
+    }
     
     input->ShutDown();
     
-   // sameFile.Close(); 
+    sameFile.Close(); 
 
     //Closing the File. Doing this will create a file of 0KB
    // diskFile.Close();
