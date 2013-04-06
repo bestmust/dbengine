@@ -181,9 +181,6 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
     
     this->MoveFirst();
     
-    //destroy the input and output pipes.
-    delete input;
-    delete output;
 }
 
 void SortedDBFile::Add(Record &rec) {
@@ -235,9 +232,6 @@ void SortedDBFile::MoveFirst() {
         fileMode = reading;
         curPage = 0;
     
-        //destroy the input and output pipes.
-        delete input;
-        delete output;
     } 
     
     if (diskFile.GetLength()>0) {
@@ -279,10 +273,6 @@ int SortedDBFile::GetNext(Record &fetchme) {
         //change the file mode to reading and initialize the next page to be read.
         fileMode = reading;
         curPage = 0;
-    
-    //destroy the input and output pipes.
-        delete input;
-        delete output;
         
         //actually read the first page.
         this->MoveFirst();
@@ -383,13 +373,12 @@ void SortedDBFile::WriteOut() {
     
     diskFile.AddPage(&outPage,writePage);
     
+        //update the new number of Pages
         numPages = diskFile.GetLength();
-        //writePage = numPages;
         //shutdown the output pipe if everything is done.
         output->ShutDown();
         
         //delete the input and output pipes
         delete input;
         delete output;
-    
 }
