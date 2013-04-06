@@ -29,9 +29,10 @@ SortedDBFile::SortedDBFile() {
     //let the file be in reading mode initially.
     fileMode= reading;
     
+    //initialize the runlength
     mySortInfo = new SortInfo();
-    //mySortInfo->myOrder = new OrderMaker();
     
+    //initialize current read page = 0
     curPage = 0;
 }
 
@@ -67,12 +68,11 @@ int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
     //Initializing the meta file info
     fileInfo.fileType = sorted;
     
+    //initializing the ordermaker
     SortInfo *temp = (SortInfo *)startup;
-    OrderMaker o = *temp->myOrder;
+    OrderMaker o = *temp->myOrder; 
     
-    
-    
-    //Write out the meta Info File
+    //Write out the filetype runlength and ordermaker in the Info File
     ofstream metaFile(metaFileName, ios::binary);
     metaFile.write((char*) &fileInfo, sizeof (fileInfo));
     metaFile.write((char*) &temp->runLength, sizeof (int));
@@ -94,26 +94,17 @@ int SortedDBFile::Open(char *f_path) {
     //Create the MetaFileName
     metaFileName = (char *) malloc(strlen(f_path) + 6);
     strcpy(metaFileName, f_path);
-    strcat(metaFileName, ".info");
+    strcat(metaFileName, ".info"); 
     
-    
-    
-    //read the meta file contents
+    //read the meta file contents namely filetype runlength and ordermaker.
     ifstream metaFile(metaFileName, ios::binary);
     metaFile.read((char *) &fileInfo, sizeof (fileInfo));
     metaFile.read((char *) &mySortInfo->runLength, sizeof (int));
     metaFile.read((char *) &o, sizeof (OrderMaker));
     metaFile.close();
     
-    //mySortInfo->myOrder = &o;
     
-    cout<<mySortInfo->runLength;
-    
-    o.Print();
-    
-   // exit(0);
-    
-    //check if the file exists.
+    //check if the bin file exists.
     ifstream binFile(f_path);
     if (binFile == 0)
         return 0;
@@ -183,39 +174,10 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
     //Close the file that was opened for bulk loading
     fclose(loadFile);
     
-    //shutdown the input pipe so that the BigQ can start the second phase.
-    input->ShutDown();
+    this->WriteOut();
     
-    //suck the records from output pipe and save them in the file.
-    while (output->Remove(&temp)) {
-
-        MDLog("MD:Record Sucked - ", curRec);
-
-        if (inPage.Append(&temp) == 0) {
-            // Write this Page to the file and create a new Page;
-            diskFile.AddPage(&inPage, numPages);
-
-            MDLog("MD:Page Added Inside", numPages);
-
-            //Incrementing the Page offset
-            numPages = numPages + 1;
-            //Asserting where the page was consumed;
-            inPage.EmptyItOut();
-            //The current record read in will be written
-            inPage.Append(&temp);
-        }
-
-        //Incrementing the Current record offset;
-        curRec = curRec + 1;
-    }
-
-    //Add the Remaining Page to the File
-    diskFile.AddPage(&inPage, numPages);
-
-    numPages = numPages + 1;
-  
-    MDLog("MD:Last Page Added", numPages);
-    MDLog("Record Offset = ", curRec);
+    fileMode = reading;
+    curPage = 0;
     
     //destroy the input and output pipes.
     delete input;
@@ -263,12 +225,18 @@ void SortedDBFile::Add(Record &rec) {
 
 void SortedDBFile::MoveFirst() {
     
-    if(fileMode == reading)
+    if (fileMode == writing)
     {
-        if (diskFile.GetLength()>0) {
+        this->WriteOut();
+        
+        //change the file mode to reading.
+        fileMode = reading;
+    } 
+    
+    if (diskFile.GetLength()>0) {
         
             //Reads the First Page into the File
-        diskFile.GetPage(&inPage, 0);
+            diskFile.GetPage(&inPage, 0);
 
             MDLog("First Page Read", NULL);
 
@@ -279,14 +247,6 @@ void SortedDBFile::MoveFirst() {
             curRec = 0;
 
      }
-    }
-    else if (fileMode == writing)
-    {
-        this->WriteOut();
-        
-        //change the file mode to reading.
-        fileMode = reading;
-    }
    
 }
 
@@ -385,15 +345,10 @@ void SortedDBFile::WriteOut() {
     
     diskFile.Open(1, filePath);
 
-    //Closing the File. Doing this will create a file of 0KB
-   // 
-  // diskFile.Open(0, filePath);
-  //  diskFile.Close();
-  //  
+    
     
     Page outPage;
-    //writePage1.EmptyItOut();
-    
+        
     writePage = 0;
     
     while(output->Remove(&rec))
