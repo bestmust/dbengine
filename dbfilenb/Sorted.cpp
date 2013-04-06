@@ -239,8 +239,6 @@ void SortedDBFile::MoveFirst() {
             //Reads the First Page into the File
             diskFile.GetPage(&inPage, 0);
 
-            MDLog("First Page Read", NULL);
-
             //Moves the Current Page Pointer to Zero
             curPage = 1;
 
@@ -325,39 +323,42 @@ int SortedDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 
 void SortedDBFile::WriteOut() {
     
+    //close the current file to avoid any problems
     diskFile.Close();
     
-   //merge with current file.
+   //merge the output pipe with the current file.
+    //open same file
     DBFile sameFile;
     sameFile.Open(filePath);
     sameFile.MoveFirst();
     
     Record rec;
     
-   
-    
+    //read all records and insert into the in
     while(sameFile.GetNext(rec))
     {
         input->Insert(&rec);
     }
     
+    //shutdown the input pipe so that BigQ can start second phase.
     input->ShutDown();
-    
+    //close the same file which was opened for reading.
     sameFile.Close(); 
     
+    //again open the current file and write out the output. check if its fine to open the file as new
     diskFile.Open(1, filePath);
-
     
-    
+    //this it the temporary page used for writing to disk
     Page outPage;
-        
+    
+    //start writing from the first page
     writePage = 0;
     
     while(output->Remove(&rec))
     {
         if(outPage.Append(&rec)==0) {
 
-		diskFile.AddPage(&outPage,writePage);
+	    diskFile.AddPage(&outPage,writePage);
             
             outPage.EmptyItOut();
             
@@ -365,13 +366,13 @@ void SortedDBFile::WriteOut() {
             
             writePage = writePage + 1;
             
-             MDLog("New Page is Created and added to file ", writePage);
+            MDLog("New Page is Created and added to file ", writePage);
             
         }
         
     }
-    
-    diskFile.AddPage(&outPage,writePage);
+        //write the last page to the disk.
+        diskFile.AddPage(&outPage,writePage);
     
         //update the new number of Pages
         numPages = diskFile.GetLength();
