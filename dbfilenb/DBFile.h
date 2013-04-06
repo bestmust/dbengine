@@ -56,13 +56,16 @@ protected:
     //Temporarily Store the Path of the metaFile
     char *metaFileName;
     
-    //for sorted file
+    //for sorted file. use only the file length. so not use ordermaker.
     SortInfo *mySortInfo;
     
     Mode fileMode;
   
     //Internal BigQ thread id
     pthread_t BigQ_thread;
+    
+    //this is the main important file ordermaker
+    OrderMaker o;
     
 
 public:

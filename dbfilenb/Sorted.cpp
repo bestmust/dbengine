@@ -28,6 +28,9 @@ SortedDBFile::SortedDBFile() {
     
     //let the file be in reading mode initially.
     fileMode= reading;
+    
+    mySortInfo = new SortInfo();
+    mySortInfo->myOrder = new OrderMaker();
 }
 
 int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
@@ -61,11 +64,17 @@ int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
 
     //Initializing the meta file info
     fileInfo.fileType = sorted;
-
+    
+    SortInfo *temp = (SortInfo *)startup;
+    OrderMaker o = *temp->myOrder;
+    
+    
+    
     //Write out the meta Info File
     ofstream metaFile(metaFileName, ios::binary);
     metaFile.write((char*) &fileInfo, sizeof (fileInfo));
-    metaFile.write((char*) &startup, sizeof (SortInfo));
+    metaFile.write((char*) &temp->runLength, sizeof (int));
+    metaFile.write((char*) &o, sizeof (OrderMaker));
     metaFile.close();
 
     return 1;
@@ -85,12 +94,23 @@ int SortedDBFile::Open(char *f_path) {
     strcpy(metaFileName, f_path);
     strcat(metaFileName, ".info");
     
+    
+    
     //read the meta file contents
     ifstream metaFile(metaFileName, ios::binary);
     metaFile.read((char *) &fileInfo, sizeof (fileInfo));
-    metaFile.read((char *) &mySortInfo, sizeof (SortInfo));
+    metaFile.read((char *) &mySortInfo->runLength, sizeof (int));
+    metaFile.read((char *) &o, sizeof (OrderMaker));
     metaFile.close();
-
+    
+    mySortInfo->myOrder = &o;
+    
+    cout<<mySortInfo->runLength;
+    
+    o.Print();
+    
+   // exit(0);
+    
     //check if the file exists.
     ifstream binFile(f_path);
     if (binFile == 0)
@@ -220,7 +240,7 @@ void SortedDBFile::Add(Record &rec) {
         int length = mySortInfo->runLength;
         
         //initialize and create the BigQ thread.   
-        BigQarg arg = {*input,*output,*mySortInfo->myOrder,length};
+        BigQarg arg = {*input,*output,o,length};
         
         //now create the BigQ thread to sort the input.
         error = pthread_create(&BigQ_thread, NULL,BigQThread,(void *) &arg);
