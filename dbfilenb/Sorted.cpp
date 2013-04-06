@@ -372,13 +372,7 @@ void SortedDBFile::WriteOut() {
     
     Record rec;
     
-    int ret;
-    
-    ret = sameFile.GetNext(rec);
-    
-    cout<<"\nReturn Value is :"<<ret<<endl;
-    
-    //exit(1);
+   
     
     while(sameFile.GetNext(rec))
     {
