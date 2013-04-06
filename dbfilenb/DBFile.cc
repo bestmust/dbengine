@@ -27,8 +27,6 @@
 
 int DBFile::Create(char *f_path, fType f_type, void *startup) {
     
-    int ret;
-
     //crete either heap, sorted or Btree file
     if (f_type == heap)
     {
@@ -43,8 +41,9 @@ int DBFile::Create(char *f_path, fType f_type, void *startup) {
         // code for B tree file
     }
         
+    //actually create the respective file.
+    int ret;
     ret = myInternalVar->Create(f_path,f_type,startup);
-    
     if(!ret)
     {
         cout<<"\nError while creating file";
@@ -73,6 +72,11 @@ int DBFile::Open(char *f_path) {
 
     //extract the file information from the medaFile
     ifstream metaFile(metaFileName, ios::binary);
+    if(!metaFile)
+    {
+       cout<<"\nError while opening the Meta file: "<<metaFileName<<endl;
+       exit(0);
+    }
     metaFile.read((char *) &fileInfo, sizeof (fileInfo));
     metaFile.close();
     
@@ -96,12 +100,11 @@ int DBFile::Open(char *f_path) {
     ret = myInternalVar->Open(f_path);
     if(!ret)
     {
-        cout<<"\nError while opening the file";
+        cerr<<"\nError while opening the DBFile file: "<<f_path<<endl;
         exit(0);
     }
     
     return ret;
-    
 }
 
 void DBFile::MoveFirst() {

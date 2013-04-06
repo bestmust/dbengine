@@ -159,8 +159,6 @@ void HeapDBFile::MoveFirst() {
         //Moves the Current Rec Pointer to Zero
         curRec = 0;
 
-        //Closes the diskFile
-        //        diskFile.Close();
     }
     cout<<"HeapDBFile: MoveFirst Success\n";
 }
@@ -208,8 +206,6 @@ void HeapDBFile::Add(Record &rec) {
 int HeapDBFile::GetNext(Record &fetchme) {
 
     //MDLog("Opening disk file",filePath);
-
-    //    diskFile.Open(1, filePath);
 
     if (writePage == numPages) {
         MDLog("Page has become NULL", NULL);

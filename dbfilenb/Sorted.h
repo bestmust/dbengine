@@ -23,7 +23,7 @@
 #include<time.h>
 #include <algorithm>
 
-#define MANUALDEBUG 0
+#define MANUALDEBUG 1
 
 #if MANUALDEBUG
 #define MDLog(x,y)  ( cout<<"\n"<<x<<" - "<<y )
@@ -33,6 +33,9 @@
 
 class SortedDBFile: public GenericDBFile {
 private:
+    
+    //for closing the input pipe and writing the file.
+    void WriteOut();
    
 public:
 
@@ -56,9 +59,6 @@ public:
     void Add(Record &addme);
     int GetNext(Record &fetchme);
     int GetNext(Record &fetchme, CNF &cnf, Record &literal);
-    
-    //for closing the input pipe and writing the file.
-    void WriteOut();
 
 };
 

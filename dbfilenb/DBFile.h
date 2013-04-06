@@ -13,8 +13,8 @@
 #include <iostream>
 #include <stdio.h>
 #include <vector>
-#include<cstdlib>
-#include<time.h>
+#include <cstdlib>
+#include <time.h>
 #include <algorithm>
 
 struct SortInfo {
@@ -26,16 +26,19 @@ int runLength;
 
 class GenericDBFile {
 protected:
-    //Page that was currently written
+    //Page pointer that was/will be currently written
     off_t writePage;
 
-    //Current Record Pointer
+    //Current Record Pointer. currently it is the absolute record pointer. if possible change it to the relative
+    //record pointer in the page.
     off_t curRec;
 
     //Current Page
     off_t curPage;
 
     //Number of Pages in File
+    //REMEMBER: the number of pages will always be 1 more than than pages containing data.
+    //because the first page contains extra information and no data.
     off_t numPages;
 
     //File Object that will be used to store the Pages on the disk

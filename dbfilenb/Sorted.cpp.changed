@@ -24,10 +24,13 @@ SortedDBFile::SortedDBFile() {
     numPages = 0;
     
     //initialize written pages to zero
-    writePage=0;
+    //writePage=0;
     
     //let the file be in reading mode initially.
     fileMode= reading;
+    curPage = 0;
+    
+    mySortInfo.myOrder = new OrderMaker();
 }
 
 int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
@@ -40,10 +43,6 @@ int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
     //Copy the file Path to a variable in memory
     filePath = (char *) malloc(strlen(f_path));
     strcpy(filePath, f_path);
-
-    //Set Current Record Position to 0, Current Page Position to Zero
-    curRec = 0;
-    curPage = 0;
 
     //Check if the file already exists if it does DO_NOT CREATE FILE;
     ifstream checkMeta(metaFileName, ios::in);
@@ -88,6 +87,7 @@ int SortedDBFile::Open(char *f_path) {
     //read the meta file contents
     ifstream metaFile(metaFileName, ios::binary);
     metaFile.read((char *) &fileInfo, sizeof (fileInfo));
+    //read the ordermaker
     metaFile.read((char *) &mySortInfo, sizeof (SortInfo));
     metaFile.close();
 
@@ -96,11 +96,13 @@ int SortedDBFile::Open(char *f_path) {
     if (binFile == 0)
         return 0;
 
-    //Set the currently read record to zero
-    curRec = 0;
+    //Set Current Record Position to 0, Current Page Position to Zero
+    //curRec = 0;
+    
     
     //open the file in the reading mode.
     fileMode = reading;
+    curPage = 0;
     
     //actually open the file
     diskFile.Open(1, f_path);
@@ -108,8 +110,14 @@ int SortedDBFile::Open(char *f_path) {
     //get the number of pages in the file;
     numPages = diskFile.GetLength();
     
+#if MANUALDEBUG
+    cout<<"\nTotal number of pages is - "<<numPages<<endl;
+#endif
+    
     //move to the first record of the file
     MoveFirst();
+    
+    return 1;
 }
 
 void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
@@ -134,10 +142,10 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
         input = new Pipe(PIPE_BUFF_SIZE);
         output = new Pipe(PIPE_BUFF_SIZE);
          //runlength for the bigQ
-        int length = mySortInfo->runLength;
+        int length = mySortInfo.runLength;
         
         //initialize and create the BigQ thread.   
-        BigQarg arg = {*input,*output,*mySortInfo->myOrder,length};
+        BigQarg arg = {*input,*output,*mySortInfo.myOrder,length};
         
         //now create the BigQ thread to sort the input.
         pthread_create(&BigQ_thread, NULL,BigQThread,(void *) &arg);
@@ -156,6 +164,7 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
                 input->Insert(&temp);
         }
         fileMode = reading;
+        curPage = 0;
     }
     
     //Close the file that was opened for bulk loading
@@ -167,16 +176,12 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
     //suck the records from output pipe and save them in the file.
     while (output->Remove(&temp)) {
 
-        MDLog("MD:Record Sucked - ", curRec);
-
         if (inPage.Append(&temp) == 0) {
+            
             // Write this Page to the file and create a new Page;
             diskFile.AddPage(&inPage, numPages);
-
-            MDLog("MD:Page Added Inside", numPages);
-
-            //Incrementing the Page offset
             numPages = numPages + 1;
+            
             //Asserting where the page was consumed;
             inPage.EmptyItOut();
             //The current record read in will be written
@@ -184,17 +189,13 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
         }
 
         //Incrementing the Current record offset;
-        curRec = curRec + 1;
+        //curRec = curRec + 1;
     }
 
-    //Add the Remaining Page to the File
+    //Add the Last Page to the File
     diskFile.AddPage(&inPage, numPages);
-
     numPages = numPages + 1;
   
-    MDLog("MD:Last Page Added", numPages);
-    MDLog("Record Offset = ", curRec);
-    
     //destroy the input and output pipes.
     delete input;
     delete output;
@@ -217,10 +218,10 @@ void SortedDBFile::Add(Record &rec) {
         input->Insert(&rec);
         
         //runlength for the bigQ
-        int length = mySortInfo->runLength;
+        int length = mySortInfo.runLength;
         
         //initialize and create the BigQ thread.   
-        BigQarg arg = {*input,*output,*mySortInfo->myOrder,length};
+        BigQarg arg = {*input,*output,*mySortInfo.myOrder,length};
         
         //now create the BigQ thread to sort the input.
         error = pthread_create(&BigQ_thread, NULL,BigQThread,(void *) &arg);
@@ -241,36 +242,41 @@ void SortedDBFile::Add(Record &rec) {
 
 void SortedDBFile::MoveFirst() {
     
-    if(fileMode == reading)
+    if (fileMode == writing)
     {
-        if (curRec>0) {
+        this->WriteOut();
         
+        //change the file mode to reading and initialize the next page to be read.
+        fileMode = reading;
+   
+    }
+
+    if (numPages>0) {
+
             //Reads the First Page into the File
+        inPage.EmptyItOut();
         diskFile.GetPage(&inPage, 0);
 
             MDLog("First Page Read", NULL);
 
-            //Moves the Current Page Pointer to Zero
+            //Moves the Current Page to be read Pointer to next page
             curPage = 1;
 
             //Moves the Current Rec Pointer to Zero
-            curRec = 0;
+            //curRec = 0;
 
      }
-    }
-    else if (fileMode == writing)
+    else
     {
-        this->WriteOut();
-        
-        //change the file mode to reading.
-        fileMode = reading;
+        cout<<"\nMoveFirst: No records in the file";
+        //no need to do the following two things
+            curPage = 0;
+            //curRec = 0;
     }
    
 }
 
 int SortedDBFile::Close() {
-     
-    cout<<"SortedDBFile: Trying to close the file.";
      
     if(fileMode == writing)
     {
@@ -325,6 +331,7 @@ int SortedDBFile::GetNext(Record &fetchme) {
     //aim to remove the next line.
     //curRec = curRec + 1;
     return 1;
+    
 }
 
 int SortedDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
@@ -341,40 +348,53 @@ int SortedDBFile::GetNext(Record &fetchme, CNF &cnf, Record &literal) {
 
 void SortedDBFile::WriteOut() {
     
-    input->ShutDown();
+   //merge with current file.
+    //DBFile sameFile;
+    //sameFile.Open(filePath);
+    //sameFile.MoveFirst();
     
     Record rec;
     
-    while(output->Remove(&rec))
-    {
-        //MDLog("Read In the Record ", NULL);
+    //while(sameFile.GetNext(rec))
+    //{
+  //      input->Insert(&rec);
+   // }
     
-    if (numPages > 0 && writePage == 0) {
-        MDLog("Read In the Page -", numPages);
-        diskFile.GetPage(&writePage1, numPages - 1);
-    }
+    input->ShutDown();
     
-    //Write the Record specified in the argument int othe last page
-    if (writePage1.Append(&rec) == 0) {
+   // sameFile.Close(); 
 
+    //Closing the File. Doing this will create a file of 0KB
+   // diskFile.Close();
+  // diskFile.Open(0, filePath);
+  //  diskFile.Close();
+  //  diskFile.Open(1, filePath);
+    
+    Page outPage;
     writePage1.EmptyItOut();
     
-        writePage1.Append(&rec);
+    writePage = 0;
     
-        numPages = numPages + 1;
+    while(output->Remove(&rec))
+    {
+        if(writePage1.Append(&rec)==0) {
             
-        MDLog("New Page is Created and added to file ", numPages);
+            writePage1.EmptyItOut();
             
-    }
+            writePage1.Append(&rec);
             
-    //Add this page to the file
-    diskFile.AddPage(&writePage1, numPages);
+            writePage = writePage + 1;
             
-    //Close the diskFile
-    //    diskFile.Close();
-    writePage = numPages;
+             MDLog("New Page is Created and added to file ", writePage);
             
         }
+        diskFile.AddPage(&outPage,writePage);
+    }
+    
+    //diskFile.AddPage(&outPage,writePage);
+    
+        numPages = diskFile.GetLength();
+        //writePage = numPages;
         //shutdown the output pipe if everything is done.
         output->ShutDown();
         
@@ -383,3 +403,4 @@ void SortedDBFile::WriteOut() {
         delete output;
     
 }
+
