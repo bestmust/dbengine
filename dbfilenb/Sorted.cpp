@@ -48,7 +48,7 @@ int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
     strcpy(filePath, f_path);
 
     //Set Current Record Position to 0, Current Page Position to Zero
-    curRec = 0;
+//    curRec = 0;
     curPage = 0;
 
     //Check if the file already exists if it does DO_NOT CREATE FILE;
@@ -179,6 +179,8 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
     fileMode = reading;
     curPage = 0;
     
+    this->MoveFirst();
+    
     //destroy the input and output pipes.
     delete input;
     delete output;
@@ -231,6 +233,11 @@ void SortedDBFile::MoveFirst() {
         
         //change the file mode to reading.
         fileMode = reading;
+        curPage = 0;
+    
+        //destroy the input and output pipes.
+        delete input;
+        delete output;
     } 
     
     if (diskFile.GetLength()>0) {
@@ -244,7 +251,7 @@ void SortedDBFile::MoveFirst() {
             curPage = 1;
 
             //Moves the Current Rec Pointer to Zero
-            curRec = 0;
+            //curRec = 0;
 
      }
    
@@ -271,6 +278,11 @@ int SortedDBFile::GetNext(Record &fetchme) {
         
         //change the file mode to reading and initialize the next page to be read.
         fileMode = reading;
+        curPage = 0;
+    
+    //destroy the input and output pipes.
+        delete input;
+        delete output;
         
         //actually read the first page.
         this->MoveFirst();
