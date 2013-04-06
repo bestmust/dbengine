@@ -163,7 +163,7 @@ int main (int argc, char *argv[]) {
 		cout << "\t 7. orders \n";
 		cout << "\t 8. lineitem \n \t ";
 		//cin >> findx;
-                findx = 2;
+                findx = 5;
 	}
 	rel = rel_ptr [findx - 1];
 
