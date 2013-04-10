@@ -247,7 +247,7 @@ void q5 () {
 	P_ps.WaitUntilDone ();
 	D.WaitUntilDone ();
 	W.WaitUntilDone ();
-
+        
 	cout << " query5 finished..output written to file " << fwpath << "\n";
 }
 
