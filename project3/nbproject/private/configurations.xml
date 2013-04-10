@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="88">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="dbfilenb">
+      <df name="tmp">
+      </df>
+      <in>BigQ.cc</in>
+      <in>BigQ.h</in>
+      <in>Comparison.cc</in>
+      <in>Comparison.h</in>
+      <in>ComparisonEngine.cc</in>
+      <in>ComparisonEngine.h</in>
+      <in>DBFile.cc</in>
+      <in>DBFile.h</in>
+      <in>Defs.h</in>
+      <in>File.cc</in>
+      <in>File.h</in>
+      <in>Function.cc</in>
+      <in>Function.h</in>
+      <in>Heap.cc</in>
+      <in>Heap.h</in>
+      <in>ParseFunc.h</in>
+      <in>ParseTree.h</in>
+      <in>Pipe.cc</in>
+      <in>Pipe.h</in>
+      <in>Record.cc</in>
+      <in>Record.h</in>
+      <in>RelOp.cc</in>
+      <in>RelOp.h</in>
+      <in>Schema.cc</in>
+      <in>Schema.h</in>
+      <in>Sorted.cpp</in>
+      <in>Sorted.h</in>
+      <in>TwoWayList.cc</in>
+      <in>TwoWayList.h</in>
+      <in>lex.yy.c</in>
+      <in>lex.yyfunc.c</in>
+      <in>test.cc</in>
+      <in>test.h</in>
+      <in>y.tab.c</in>
+      <in>y.tab.h</in>
+      <in>yyfunc.tab.c</in>
+      <in>yyfunc.tab.h</in>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>true</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>
