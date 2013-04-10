@@ -21,19 +21,7 @@ enum Type {Int, Double, String};
 
 unsigned int Random_Generate();
 
-typedef enum {
-    heap, sorted, tree
-} fType;
 
-typedef enum {
-    reading, writing
-} Mode;
-
-// Structure to store the meta data of DBFile
-typedef struct MetaInfo {
-    // Type of the file {heap, sorted, tree}
-    fType fileType;
-} Meta;
 
 
 
