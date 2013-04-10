@@ -138,6 +138,7 @@ void DuplicateRemoval::DR_Operation () {
                 rec=recNext;
             }
         }
+        dr_outPipe->Insert(&rec);
     }
     
     dr_outPipe->ShutDown();
@@ -149,6 +150,48 @@ void DuplicateRemoval::WaitUntilDone () {
 }
 
 void DuplicateRemoval::Use_n_Pages (int runlen) {
+    runLength = runlen;
+}
+
+
+void* WO_Thread(void *wo_currentObj) {
+    
+        WriteOut obj = *((WriteOut *) wo_currentObj);
+
+        obj.WO_Operation();
+        pthread_exit(NULL);
+        //Peform a getnext to fetch the record from dbfile and keep a counter that increments when a page overflow
+}
+
+void WriteOut::Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) {
+    wo_inPipe = &inPipe;
+    wo_outFile = outFile;
+    wo_mySchema = &mySchema;
+    
+    int pthreadvar = pthread_create(&wo_thread, NULL, &WO_Thread,(void *) this);
+    if (pthreadvar) {
+                printf("Error while creating a thread\n");
+                exit(-1);
+        }
+    
+}
+
+void WriteOut::WO_Operation () {
+    
+    Record rec;
+    
+    while(wo_inPipe->Remove(&rec))
+    {
+        rec.PrintToFile(wo_outFile,wo_mySchema);
+    }
+    
+}
+
+void WriteOut::WaitUntilDone () {
+	pthread_join (wo_thread, NULL);
+}
+
+void WriteOut::Use_n_Pages (int runlen) {
     runLength = runlen;
 }
 

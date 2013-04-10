@@ -89,9 +89,16 @@ class GroupBy : public RelationalOp {
 	void Use_n_Pages (int n) { }
 };
 class WriteOut : public RelationalOp {
+private:
+    Pipe *wo_inPipe;
+    FILE *wo_outFile;
+    Schema *wo_mySchema;
+    pthread_t wo_thread;
+    int runLength;
 	public:
-	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+        void WO_Operation ();
 };
 #endif

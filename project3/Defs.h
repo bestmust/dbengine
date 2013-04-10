@@ -4,7 +4,7 @@
 
 #define MAX_ANDS 20
 #define MAX_ORS 20
-#define PIPE_BUFF_SIZE 200
+#define PIPE_BUFF_SIZE 100
 #define PAGE_SIZE 131072
 
 
