@@ -19,12 +19,17 @@ class RelationalOp {
 class SelectFile : public RelationalOp { 
 
 	private:
-	// pthread_t thread;
-	// Record *buffer;
-
+        DBFile *sf_inputFile;
+        Pipe *sf_outputPipe;
+        CNF *sf_selectOperator;
+        Record *sf_literalRecord;
+        int sf_runlen;
+	pthread_t thread;
+        
 	public:
 
 	void Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal);
+        void SF_Operation();
 	void WaitUntilDone ();
 	void Use_n_Pages (int n);
 

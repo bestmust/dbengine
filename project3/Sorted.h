@@ -23,7 +23,7 @@
 #include<time.h>
 #include <algorithm>
 
-#define MANUALDEBUG 1
+#define MANUALDEBUG 0
 
 #if MANUALDEBUG
 #define MDLog(x,y)  ( cout<<"\n"<<x<<" - "<<y )
