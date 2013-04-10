@@ -112,28 +112,28 @@ void q1 () {
 void q2 () {
 
 	char *pred_p = "(p_retailprice > 931.01) AND (p_retailprice < 931.3)";
-	init_SF_p (pred_p, 100);
+        init_SF_p (pred_p, 100);
 
-	Project P_p;
-		Pipe _out (pipesz);
-		int keepMe[] = {0,1,7};
-		int numAttsIn = pAtts;
-		int numAttsOut = 3;
-	P_p.Use_n_Pages (buffsz);
+        Project P_p;
+                Pipe _out (pipesz);
+                int keepMe[] = {0,1,7};
+                int numAttsIn = pAtts;
+                int numAttsOut = 3;
+        P_p.Use_n_Pages (buffsz);
 
-	SF_p.Run (dbf_p, _p, cnf_p, lit_p);
-	P_p.Run (_p, _out, keepMe, numAttsIn, numAttsOut);
+        SF_p.Run (dbf_p, _p, cnf_p, lit_p);
+        P_p.Run (_p, _out, keepMe, numAttsIn, numAttsOut);
 
-	SF_p.WaitUntilDone ();
-	P_p.WaitUntilDone ();
+        SF_p.WaitUntilDone ();
+        P_p.WaitUntilDone ();
 
-	Attribute att3[] = {IA, SA, DA};
-	Schema out_sch ("out_sch", numAttsOut, att3);
-	int cnt = clear_pipe (_p, p->schema (), true);
+        Attribute att3[] = {IA, SA, DA};
+        Schema out_sch ("out_sch", numAttsOut, att3);
+        int cnt = clear_pipe (_out, &out_sch, true);
 
-	cout << "\n\n query2 returned " << cnt << " records \n";
+        cout << "\n\n query2 returned " << cnt << " records \n";
 
-	dbf_p.Close ();
+        dbf_p.Close ();
 }
 
 // select sum (s_acctbal + (s_acctbal * 1.05)) from supplier;

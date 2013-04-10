@@ -59,7 +59,7 @@ void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, i
     this->p_numAttsInput = numAttsInput;
     this->p_numAttsOutput = numAttsOutput;
     
-    int pthreadvar = pthread_create(&p_thread, NULL, &SF_Thread,(void *) this);
+    int pthreadvar = pthread_create(&p_thread, NULL, &P_Thread,(void *) this);
     if (pthreadvar) {
                 printf("Error while creating a thread\n");
                 exit(-1);
@@ -68,19 +68,13 @@ void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, i
 }
 
 void Project::P_Operation () {
-    Record *objRecord;
-        while (true) {
-                objRecord = new Record;
-                if (!((this->p_inPipe)->Remove(objRecord))) {
-                        break;
-                } else {
-                        objRecord->Project(p_keepMe, p_numAttsOutput, p_numAttsInput);
-                        (this->p_outPipe)->Insert(objRecord);
-                }
-        }
-        (this->p_inPipe)->ShutDown();
-        (this->p_outPipe)->ShutDown();
-    
+    Record tempRec;
+    while(p_inPipe->Remove(&tempRec))
+    {
+        tempRec.Project(p_keepMe,p_numAttsOutput,p_numAttsInput);
+        p_outPipe->Insert(&tempRec);
+    }
+    p_outPipe->ShutDown();
 }
 
 void Project::WaitUntilDone () {
