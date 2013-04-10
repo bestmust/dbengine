@@ -64,10 +64,17 @@ class Join : public RelationalOp {
 	void Use_n_Pages (int n) { }
 };
 class DuplicateRemoval : public RelationalOp {
+private:
+    Pipe *dr_inPipe,*dr_outPipe;
+    Schema *dr_mySchema;
+    //OrderMaker dr_orderMaker;
+    pthread_t dr_thread;
+    int runLength;
 	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+	void Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+        void DR_Operation();
 };
 class Sum : public RelationalOp {
 	public:

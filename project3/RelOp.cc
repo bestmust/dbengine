@@ -1,4 +1,5 @@
 #include "RelOp.h"
+#include "BigQ.h"
 
 void* SF_Thread(void *sf_currentObj) {
     
@@ -82,6 +83,72 @@ void Project::WaitUntilDone () {
 }
 
 void Project::Use_n_Pages (int runlen) {
+    runLength = runlen;
+}
+
+
+void* DR_Thread(void *dr_currentObj) {
+    
+        DuplicateRemoval obj = *((DuplicateRemoval *) dr_currentObj);
+
+        obj.DR_Operation();
+        pthread_exit(NULL);
+        //Peform a getnext to fetch the record from dbfile and keep a counter that increments when a page overflow
+}
+
+void DuplicateRemoval::Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema) {
+    this->dr_inPipe = &inPipe;
+    this->dr_outPipe = &outPipe;
+    this->dr_mySchema = &mySchema;
+    
+    int pthreadvar = pthread_create(&dr_thread, NULL, &DR_Thread,(void *) this);
+    if (pthreadvar) {
+                printf("Error while creating a thread\n");
+                exit(-1);
+        }
+    
+}
+
+void DuplicateRemoval::DR_Operation () {
+    
+    OrderMaker dr_orderMaker(dr_mySchema);
+    Pipe sortedOut(PIPE_BUFF_SIZE);
+    
+    BigQarg arg={*dr_inPipe,sortedOut,dr_orderMaker,runLength};
+    
+    pthread_t BigQ_thread;
+    
+    int error = pthread_create(&BigQ_thread, NULL,BigQThread,(void *) &arg);
+        
+        if(error)
+        {
+            cout<<"\n Error while creating the BigQ Thread error# ";
+        }
+    
+    Record rec,recNext;
+    ComparisonEngine comp;
+    
+    if(sortedOut.Remove(&rec))
+    {
+        while(sortedOut.Remove(&recNext))
+        {
+            if(comp.Compare(&rec,&recNext,&dr_orderMaker)!=0)
+            {
+                dr_outPipe->Insert(&rec);
+                rec=recNext;
+            }
+        }
+    }
+    
+    dr_outPipe->ShutDown();
+    
+}
+
+void DuplicateRemoval::WaitUntilDone () {
+	pthread_join (dr_thread, NULL);
+}
+
+void DuplicateRemoval::Use_n_Pages (int runlen) {
     runLength = runlen;
 }
 
