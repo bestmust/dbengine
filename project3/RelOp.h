@@ -23,8 +23,8 @@ class SelectFile : public RelationalOp {
         Pipe *sf_outputPipe;
         CNF *sf_selectOperator;
         Record *sf_literalRecord;
-        int sf_runlen;
-	pthread_t thread;
+        int runLength;
+	pthread_t sf_thread;
         
 	public:
 
@@ -36,16 +36,26 @@ class SelectFile : public RelationalOp {
 };
 
 class SelectPipe : public RelationalOp {
+    
+    
 	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
 };
 class Project : public RelationalOp { 
+private:
+    Pipe *p_inPipe,*p_outPipe;
+    int *p_keepMe,p_numAttsInput,p_numAttsOutput;
+    int runLength;
+    pthread_t p_thread;
+    
+    
 	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+        void P_Operation();
+	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
 };
 class Join : public RelationalOp { 
 	public:
