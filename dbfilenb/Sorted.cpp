@@ -82,7 +82,6 @@ int SortedDBFile::Create(char *f_path, fType f_type, void *startup) {
     return 1;
 }
 
-
 int SortedDBFile::Open(char *f_path) {
     
     //SortInfo startup;
@@ -176,10 +175,9 @@ void SortedDBFile::Load(Schema &f_schema, char *loadpath) {
     
     this->WriteOut();
     
-    fileMode = reading;
-    curPage = 0;
+    inPage.EmptyItOut();
     
-    this->MoveFirst();
+    curPage = 0;
     
 }
 
