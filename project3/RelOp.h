@@ -7,13 +7,16 @@
 #include "Function.h"
 
 class RelationalOp {
+protected:
+    pthread_t thread;
 	public:
 	// blocks the caller until the particular relational operator 
 	// has run to completion
 	virtual void WaitUntilDone () = 0;
-
-	// tell us how much internal memory the operation can use
-	virtual void Use_n_Pages (int n) = 0;
+        
+        virtual void Operation() {}; // make it =0; after all functions are implemented
+        
+        virtual void Run() {}; // make it =0; after all functions are implemented
 };
 
 class SelectFile : public RelationalOp { 
@@ -24,35 +27,35 @@ class SelectFile : public RelationalOp {
         CNF *sf_selectOperator;
         Record *sf_literalRecord;
         int runLength;
-	pthread_t sf_thread;
-        
+	        
 	public:
 
 	void Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal);
-        void SF_Operation();
+        void Operation();
 	void WaitUntilDone ();
 	void Use_n_Pages (int n);
 
 };
 
 class SelectPipe : public RelationalOp {
-    
-    
+private:
+    Pipe *sp_inPipe,*sp_outPipe;
+    CNF *sp_selOp;
+    Record *sp_literal;
 	public:
 	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal);
 	void WaitUntilDone ();
-	void Use_n_Pages (int n);
+        void Operation();
 };
 class Project : public RelationalOp { 
 private:
     Pipe *p_inPipe,*p_outPipe;
     int *p_keepMe,p_numAttsInput,p_numAttsOutput;
     int runLength;
-    pthread_t p_thread;
     
     
 	public:
-        void P_Operation();
+        void Operation();
 	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput);
 	void WaitUntilDone ();
 	void Use_n_Pages (int n);
@@ -67,14 +70,12 @@ class DuplicateRemoval : public RelationalOp {
 private:
     Pipe *dr_inPipe,*dr_outPipe;
     Schema *dr_mySchema;
-    //OrderMaker dr_orderMaker;
-    pthread_t dr_thread;
     int runLength;
 	public:
 	void Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema);
 	void WaitUntilDone ();
 	void Use_n_Pages (int n);
-        void DR_Operation();
+        void Operation();
 };
 class Sum : public RelationalOp {
 	public:
@@ -93,12 +94,9 @@ private:
     Pipe *wo_inPipe;
     FILE *wo_outFile;
     Schema *wo_mySchema;
-    pthread_t wo_thread;
-    int runLength;
 	public:
 	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema);
 	void WaitUntilDone ();
-	void Use_n_Pages (int n);
-        void WO_Operation ();
+        void Operation ();
 };
 #endif

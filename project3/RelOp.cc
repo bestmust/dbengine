@@ -5,7 +5,7 @@ void* SF_Thread(void *sf_currentObj) {
     
         SelectFile obj = *((SelectFile *) sf_currentObj);
 
-        obj.SF_Operation();
+        obj.Operation();
         pthread_exit(NULL);
         //Peform a getnext to fetch the record from dbfile and keep a counter that increments when a page overflow
 }
@@ -16,7 +16,7 @@ void SelectFile::Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal
     this->sf_selectOperator = &selOp;
     this->sf_literalRecord = &literal;   
     
-    int pthreadvar = pthread_create(&sf_thread, NULL, &SF_Thread,(void *) this);
+    int pthreadvar = pthread_create(&thread, NULL, &SF_Thread,(void *) this);
     if (pthreadvar) {
                 printf("Error while creating a thread\n");
                 exit(-1);
@@ -24,7 +24,7 @@ void SelectFile::Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal
     
 }
 
-void SelectFile::SF_Operation () {
+void SelectFile::Operation () {
 	
     Record tempRec;
     
@@ -37,7 +37,7 @@ void SelectFile::SF_Operation () {
 }
 
 void SelectFile::WaitUntilDone () {
-	pthread_join (sf_thread, NULL);
+	pthread_join (thread, NULL);
 }
 
 void SelectFile::Use_n_Pages (int runlen) {
@@ -48,7 +48,7 @@ void* P_Thread(void *p_currentObj) {
     
         Project obj = *((Project *) p_currentObj);
 
-        obj.P_Operation();
+        obj.Operation();
         pthread_exit(NULL);
         //Peform a getnext to fetch the record from dbfile and keep a counter that increments when a page overflow
 }
@@ -60,7 +60,7 @@ void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, i
     this->p_numAttsInput = numAttsInput;
     this->p_numAttsOutput = numAttsOutput;
     
-    int pthreadvar = pthread_create(&p_thread, NULL, &P_Thread,(void *) this);
+    int pthreadvar = pthread_create(&thread, NULL, &P_Thread,(void *) this);
     if (pthreadvar) {
                 printf("Error while creating a thread\n");
                 exit(-1);
@@ -68,7 +68,7 @@ void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, i
     
 }
 
-void Project::P_Operation () {
+void Project::Operation () {
     Record tempRec;
     while(p_inPipe->Remove(&tempRec))
     {
@@ -79,7 +79,7 @@ void Project::P_Operation () {
 }
 
 void Project::WaitUntilDone () {
-	pthread_join (p_thread, NULL);
+	pthread_join (thread, NULL);
 }
 
 void Project::Use_n_Pages (int runlen) {
@@ -91,7 +91,7 @@ void* DR_Thread(void *dr_currentObj) {
     
         DuplicateRemoval obj = *((DuplicateRemoval *) dr_currentObj);
 
-        obj.DR_Operation();
+        obj.Operation();
         pthread_exit(NULL);
         //Peform a getnext to fetch the record from dbfile and keep a counter that increments when a page overflow
 }
@@ -101,7 +101,7 @@ void DuplicateRemoval::Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema) {
     this->dr_outPipe = &outPipe;
     this->dr_mySchema = &mySchema;
     
-    int pthreadvar = pthread_create(&dr_thread, NULL, &DR_Thread,(void *) this);
+    int pthreadvar = pthread_create(&thread, NULL, &DR_Thread,(void *) this);
     if (pthreadvar) {
                 printf("Error while creating a thread\n");
                 exit(-1);
@@ -109,7 +109,7 @@ void DuplicateRemoval::Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema) {
     
 }
 
-void DuplicateRemoval::DR_Operation () {
+void DuplicateRemoval::Operation () {
     
     OrderMaker dr_orderMaker(dr_mySchema);
     Pipe sortedOut(PIPE_BUFF_SIZE);
@@ -146,7 +146,7 @@ void DuplicateRemoval::DR_Operation () {
 }
 
 void DuplicateRemoval::WaitUntilDone () {
-	pthread_join (dr_thread, NULL);
+	pthread_join (thread, NULL);
 }
 
 void DuplicateRemoval::Use_n_Pages (int runlen) {
@@ -158,7 +158,7 @@ void* WO_Thread(void *wo_currentObj) {
     
         WriteOut obj = *((WriteOut *) wo_currentObj);
 
-        obj.WO_Operation();
+        obj.Operation();
         pthread_exit(NULL);
         //Peform a getnext to fetch the record from dbfile and keep a counter that increments when a page overflow
 }
@@ -168,7 +168,7 @@ void WriteOut::Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) {
     wo_outFile = outFile;
     wo_mySchema = &mySchema;
     
-    int pthreadvar = pthread_create(&wo_thread, NULL, &WO_Thread,(void *) this);
+    int pthreadvar = pthread_create(&thread, NULL, &WO_Thread,(void *) this);
     if (pthreadvar) {
                 printf("Error while creating a thread\n");
                 exit(-1);
@@ -176,7 +176,7 @@ void WriteOut::Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) {
     
 }
 
-void WriteOut::WO_Operation () {
+void WriteOut::Operation () {
     
     Record rec;
     
@@ -188,10 +188,37 @@ void WriteOut::WO_Operation () {
 }
 
 void WriteOut::WaitUntilDone () {
-	pthread_join (wo_thread, NULL);
+	pthread_join (thread, NULL);
 }
 
-void WriteOut::Use_n_Pages (int runlen) {
-    runLength = runlen;
+void* SP_Thread(void *sp_currentObj) {
+    
+        SelectPipe obj = *((SelectPipe *) sp_currentObj);
+
+        obj.Operation();
+        pthread_exit(NULL);
+}
+
+void SelectPipe::Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal) {
+    sp_inPipe = &inPipe;
+    sp_outPipe = &outPipe;
+    sp_selOp = &selOp;
+    sp_literal = &literal;
+    
+    int pthreadvar = pthread_create(&thread, NULL, &SP_Thread,(void *) this);
+    if (pthreadvar) {
+                printf("Error while creating a thread\n");
+                exit(-1);
+        }
+    
+}
+
+void SelectPipe::Operation () {
+    
+    
+}
+
+void SelectPipe::WaitUntilDone () {
+	pthread_join (thread, NULL);
 }
 
