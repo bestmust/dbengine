@@ -17,6 +17,8 @@ protected:
         virtual void Operation() {}; // make it =0; after all functions are implemented
         
         virtual void Run() {}; // make it =0; after all functions are implemented
+        
+        virtual void Use_n_Pages (int n) = 0;
 };
 
 class SelectFile : public RelationalOp { 
@@ -42,10 +44,12 @@ private:
     Pipe *sp_inPipe,*sp_outPipe;
     CNF *sp_selOp;
     Record *sp_literal;
+    int runLength;
 	public:
 	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal);
 	void WaitUntilDone ();
         void Operation();
+        void Use_n_Pages (int n);
 };
 class Project : public RelationalOp { 
 private:
@@ -78,10 +82,15 @@ private:
         void Operation();
 };
 class Sum : public RelationalOp {
+private:
+    Pipe *s_inPipe,*s_outPipe;
+    Function *s_computeMe;
+    int runLength;
 	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+	void Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+        void Operation();
 };
 class GroupBy : public RelationalOp {
 private:
@@ -100,9 +109,11 @@ private:
     Pipe *wo_inPipe;
     FILE *wo_outFile;
     Schema *wo_mySchema;
+    int runLength;
 	public:
 	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema);
 	void WaitUntilDone ();
         void Operation ();
+        void Use_n_Pages (int n);
 };
 #endif

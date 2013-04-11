@@ -1,5 +1,7 @@
 #include "RelOp.h"
 #include "BigQ.h"
+#include <sstream>
+#include <fstream>
 
 void* SF_Thread(void *sf_currentObj) {
     
@@ -191,6 +193,10 @@ void WriteOut::WaitUntilDone () {
 	pthread_join (thread, NULL);
 }
 
+void WriteOut::Use_n_Pages (int runlen) {
+    runLength = runlen;
+}
+
 void* SP_Thread(void *sp_currentObj) {
     
         SelectPipe obj = *((SelectPipe *) sp_currentObj);
@@ -228,6 +234,10 @@ void SelectPipe::WaitUntilDone () {
 	pthread_join (thread, NULL);
 }
 
+void SelectPipe::Use_n_Pages (int runlen) {
+    runLength = runlen;
+}
+
 void* GB_Thread(void *currentObj) {
     
         GroupBy obj = *((GroupBy *) currentObj);
@@ -259,5 +269,100 @@ void GroupBy::WaitUntilDone () {
 }
 
 void GroupBy::Use_n_Pages (int runlen) {
+    runLength = runlen;
+}
+
+void* S_Thread(void *currentObj) {
+    
+        Sum obj = *((Sum *) currentObj);
+
+        obj.Operation();
+        pthread_exit(NULL);
+}
+
+void Sum::Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe) {
+    s_inPipe = &inPipe;
+    s_outPipe = &outPipe;
+    s_computeMe = &computeMe;
+    
+    int pthreadvar = pthread_create(&thread, NULL, &S_Thread,(void *) this);
+    if (pthreadvar) {
+                printf("Error while creating a thread\n");
+                exit(-1);
+    }
+    
+}
+
+void Sum::Operation () {
+    
+    Record rec,outRec;
+    Type ret=Double; // Initialize to atleast print 0 and not give an error
+    int intResult,finalIntResult=0;
+    double doubleResult,finalDoubleResult=0;
+    
+    stringstream strResultStream;
+    string str, out;
+    char *name = "tempSumSchema";
+    
+    if(s_inPipe->Remove(&rec)) {
+        ret = s_computeMe->Apply(rec,intResult,doubleResult);
+        if(ret==Int) {
+            finalIntResult+=intResult;
+            while (s_inPipe->Remove(&rec)) {
+                        s_computeMe->Apply(rec,intResult,doubleResult);
+                        finalIntResult+=intResult;
+                }
+        }
+        else if(ret==Double) {
+            finalDoubleResult+=doubleResult;
+            while (s_inPipe->Remove(&rec)) {
+                        s_computeMe->Apply(rec,intResult,doubleResult);
+                        finalDoubleResult+=doubleResult;
+                }
+        }
+        else {
+            cout<<"Wront type returned by Apply function in Function. Error called from Sum::Operation";
+        }
+    }
+    
+    outRec.bits =new (std::nothrow) char[sizeof(double)];
+    
+    s_inPipe->ShutDown();
+        ofstream fout(name);
+        fout << "BEGIN" << endl;
+        fout << "SUM_table" << endl;
+        fout << "sum.tbl" << endl;
+        fout << "SUM ";
+        if (ret == Int) {
+                fout << "Int" << endl;
+        } else {
+                fout << "Double" << endl;
+        }
+        fout << "END";
+        fout.close();
+        Schema mySchema("tempSumSchema", "SUM_table");
+        if (ret == Int) {
+                strResultStream << finalIntResult;
+                out = strResultStream.str();
+                str.append(out);
+                str.append("|");
+        } else {
+                strResultStream << finalDoubleResult;
+                out = strResultStream.str();
+                str.append(out);
+                str.append("|");
+        }
+        const char*src = str.c_str();
+        outRec.ComposeRecord(&mySchema, src);
+        s_outPipe->Insert(&outRec);
+        s_outPipe->ShutDown();
+        remove(name);
+}
+
+void Sum::WaitUntilDone () {
+	pthread_join (thread, NULL);
+}
+
+void Sum::Use_n_Pages (int runlen) {
     runLength = runlen;
 }
