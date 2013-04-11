@@ -84,10 +84,16 @@ class Sum : public RelationalOp {
 	void Use_n_Pages (int n) { }
 };
 class GroupBy : public RelationalOp {
+private:
+    Pipe *g_inPipe,*g_outPipe;
+    OrderMaker *g_groupAtts;
+    Function *g_computeMe;
+    int runLength;
 	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+	void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+        void Operation();
 };
 class WriteOut : public RelationalOp {
 private:

@@ -209,16 +209,55 @@ void SelectPipe::Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal) 
     if (pthreadvar) {
                 printf("Error while creating a thread\n");
                 exit(-1);
-        }
+    }
     
 }
 
 void SelectPipe::Operation () {
+    Record rec;
+    ComparisonEngine comp;
     
-    
+    while(sp_inPipe->Remove(&rec)) {
+        if(comp.Compare(&rec,sp_literal,sp_selOp))
+            sp_outPipe->Insert(&rec);
+    }
+    sp_outPipe->ShutDown();
 }
 
 void SelectPipe::WaitUntilDone () {
 	pthread_join (thread, NULL);
 }
 
+void* GB_Thread(void *currentObj) {
+    
+        GroupBy obj = *((GroupBy *) currentObj);
+
+        obj.Operation();
+        pthread_exit(NULL);
+}
+
+void GroupBy::Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe) {
+    g_inPipe = &inPipe;
+    g_outPipe = &outPipe;
+    g_groupAtts = &groupAtts;
+    g_computeMe = &computeMe;
+    
+    int pthreadvar = pthread_create(&thread, NULL, &GB_Thread,(void *) this);
+    if (pthreadvar) {
+                printf("Error while creating a thread\n");
+                exit(-1);
+    }
+    
+}
+
+void GroupBy::Operation () {
+    
+}
+
+void GroupBy::WaitUntilDone () {
+	pthread_join (thread, NULL);
+}
+
+void GroupBy::Use_n_Pages (int runlen) {
+    runLength = runlen;
+}
