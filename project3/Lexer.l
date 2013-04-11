@@ -43,11 +43,13 @@ void close_lexical_parser () { yy_delete_buffer (yylex_buf_state); }
 
 ")"    	        	return(')');
 
-"<"    		      	return('<');
+"+"    	        	return('+');
 
-">"    		 	return('>');
+"-"    	        	return('-');
 
-"=" 			return('=');
+"/"    	        	return('/');
+
+"*"    	        	return('*');
 
 -?[0-9]+ 	       {yylval.actualChars = strdup(yytext);
   			return(Int); 
@@ -55,20 +57,6 @@ void close_lexical_parser () { yy_delete_buffer (yylex_buf_state); }
 
 -?[0-9]+\.[0-9]*       {yylval.actualChars = strdup(yytext); 
   			return(Float);
-			}
-
-"OR"      		return(OR);
-
-"AND"			return(AND);
-
-\'[^'\n]*\' 	       {/* take care of ' in a string */
-	 		if (yytext[yyleng - 2] == '\\') {
-     				yymore();
-   			} else {
-				yylval.actualChars = strdup(yytext + 1);	
-				yylval.actualChars[strlen(yylval.actualChars) - 1] = 0;
-     				return(String);
-   			}
 			}
 
 [A-Za-z][A-Za-z0-9_-]* {yylval.actualChars = strdup(yytext);

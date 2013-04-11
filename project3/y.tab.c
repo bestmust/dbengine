@@ -29,7 +29,7 @@ static const char yysccsid[] = "@(#)yaccpar	1.9 (Berkeley) 02/21/93";
 	extern "C" void yyerror(char *s);
   
 	/* this is the final parse tree that is returned	*/
-	struct AndList *final;	
+	struct FuncOperator *final;	
 
 #line 20 "Parser.y"
 #ifdef YYSTYPE
@@ -39,14 +39,13 @@ static const char yysccsid[] = "@(#)yaccpar	1.9 (Berkeley) 02/21/93";
 #ifndef YYSTYPE_IS_DECLARED
 #define YYSTYPE_IS_DECLARED 1
 typedef union {
- 	struct Operand *myOperand;
-	struct ComparisonOp *myComparison; 
-  	struct OrList *myOrList;
-  	struct AndList *myAndList;
+ 	struct FuncOperand *myOperand;
+	struct FuncOperator *myOperator; 
 	char *actualChars;
+	char whichOne;
 } YYSTYPE;
 #endif /* !YYSTYPE_IS_DECLARED */
-#line 49 "y.tab.c"
+#line 48 "y.tab.c"
 
 /* compatibility with bison */
 #ifdef YYPARSE_PARAM
@@ -79,43 +78,43 @@ typedef union {
 
 extern int YYPARSE_DECL();
 
-#define OR 257
-#define AND 258
-#define Name 259
-#define String 260
-#define Float 261
-#define Int 262
+#define Name 257
+#define Float 258
+#define Int 259
 #define YYERRCODE 256
 static const short yylhs[] = {                           -1,
-    0,    0,    1,    1,    2,    2,    4,    4,    4,    3,
-    3,    3,    3,
+    0,    0,    0,    0,    0,    2,    2,    2,    2,    1,
+    1,    1,
 };
 static const short yylen[] = {                            2,
-    5,    3,    3,    1,    3,    1,    1,    1,    1,    1,
-    1,    1,    1,
+    3,    5,    3,    1,    2,    1,    1,    1,    1,    1,
+    1,    1,
 };
 static const short yydefred[] = {                         0,
-    0,    0,   13,   10,   11,   12,    0,    0,    0,    0,
-    0,    7,    8,    9,    0,    0,    3,    5,    1,
+   12,   10,   11,    0,    0,    0,    0,    0,    5,    6,
+    7,    8,    9,    0,    0,    1,    0,    2,
 };
-static const short yydgoto[] = {                          2,
-    7,    8,    9,   15,
+static const short yydgoto[] = {                          6,
+    7,   14,
 };
-static const short yysindex[] = {                       -32,
- -258,    0,    0,    0,    0,    0,  -31, -248,  -55, -247,
- -258,    0,    0,    0, -258,  -32,    0,    0,    0,
+static const short yysindex[] = {                       -40,
+    0,    0,    0,  -40,  -40,    0,  -36,  -33,    0,    0,
+    0,    0,    0,  -40,  -36,    0,  -40,    0,
 };
 static const short yyrindex[] = {                         0,
-    0,    0,    0,    0,    0,    0,    0,  -29,  -41,   13,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    1,    0,    0,    0,
+    0,    0,    0,    0,    2,    0,    0,    0,
 };
-static const short yygindex[] = {                        -2,
-    4,    0,    1,    0,
+static const short yygindex[] = {                        -1,
+    0,   -5,
 };
-#define YYTABLESIZE 216
-static const short yytable[] = {                          6,
-    3,    4,    5,    6,   12,   14,   13,    1,   11,   10,
-   16,    4,    2,   19,   17,   18,    0,    0,    0,    0,
+#define YYTABLESIZE 219
+static const short yytable[] = {                          4,
+    4,    3,    8,    9,    5,   12,   11,   15,   10,   17,
+   13,    0,   16,    0,    0,   18,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    4,    3,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -132,14 +131,14 @@ static const short yytable[] = {                          6,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    6,
+    0,    0,    0,    0,    0,    0,    1,    2,    3,
 };
-static const short yycheck[] = {                         41,
-  259,  260,  261,  262,   60,   61,   62,   40,  257,   41,
-  258,   41,    0,   16,   11,   15,   -1,   -1,   -1,   -1,
+static const short yycheck[] = {                         40,
+    0,    0,    4,    5,   45,   42,   43,   41,   45,   15,
+   47,   -1,   14,   -1,   -1,   17,   -1,   -1,   -1,   -1,
+   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+   -1,   41,   41,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
@@ -156,43 +155,39 @@ static const short yycheck[] = {                         41,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,  257,
+   -1,   -1,   -1,   -1,   -1,   -1,  257,  258,  259,
 };
-#define YYFINAL 2
+#define YYFINAL 6
 #ifndef YYDEBUG
 #define YYDEBUG 0
 #endif
-#define YYMAXTOKEN 262
+#define YYMAXTOKEN 259
 #if YYDEBUG
 static const char *yyname[] = {
 
 "end-of-file",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,"'('","')'",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"'<'","'='","'>'",0,
+0,0,0,0,0,0,"'('","')'","'*'","'+'",0,"'-'",0,"'/'",0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"OR","AND",
-"Name","String","Float","Int",
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Name",
+"Float","Int",
 };
 static const char *yyrule[] = {
-"$accept : AndList",
-"AndList : '(' OrList ')' AND AndList",
-"AndList : '(' OrList ')'",
-"OrList : Condition OR OrList",
-"OrList : Condition",
-"Condition : Literal Op Literal",
-"Condition : Literal",
-"Op : '<'",
-"Op : '>'",
-"Op : '='",
-"Literal : String",
-"Literal : Float",
-"Literal : Int",
-"Literal : Name",
+"$accept : CompoundExp",
+"CompoundExp : SimpleExp Op CompoundExp",
+"CompoundExp : '(' CompoundExp ')' Op CompoundExp",
+"CompoundExp : '(' CompoundExp ')'",
+"CompoundExp : SimpleExp",
+"CompoundExp : '-' CompoundExp",
+"Op : '-'",
+"Op : '+'",
+"Op : '*'",
+"Op : '/'",
+"SimpleExp : Float",
+"SimpleExp : Int",
+"SimpleExp : Name",
 
 };
 #endif
@@ -230,9 +225,9 @@ typedef struct {
 } YYSTACKDATA;
 /* variables for the parser stack */
 static YYSTACKDATA yystack;
-#line 169 "Parser.y"
+#line 151 "Parser.y"
 
-#line 235 "y.tab.c"
+#line 230 "y.tab.c"
 
 #if YYDEBUG
 #include <stdio.h>		/* needed for printf */
@@ -439,128 +434,115 @@ yyreduce:
     switch (yyn)
     {
 case 1:
-#line 56 "Parser.y"
+#line 48 "Parser.y"
 	{
-	/* here we need to pre-pend the OrList to the AndList*/
-	/* first we allocate space for this node*/
-	yyval.myAndList = (struct AndList *) malloc (sizeof (struct AndList));
-	final = yyval.myAndList;
+	yyval.myOperator = (struct FuncOperator *) malloc (sizeof (struct FuncOperator));	
+	yyval.myOperator->leftOperator = (struct FuncOperator *) malloc (sizeof (struct FuncOperator));
+	yyval.myOperator->leftOperator->leftOperator = NULL;
+	yyval.myOperator->leftOperator->leftOperand = yystack.l_mark[-2].myOperand;
+	yyval.myOperator->leftOperator->right = NULL;
+	yyval.myOperator->leftOperand = NULL;
+	yyval.myOperator->right = yystack.l_mark[0].myOperator;
+	yyval.myOperator->code = yystack.l_mark[-1].whichOne;	
 
-	/* hang the OrList off of the left*/
-	yyval.myAndList->left = yystack.l_mark[-3].myOrList;
-
-	/* hang the AndList off of the right*/
-	yyval.myAndList->rightAnd = yystack.l_mark[0].myAndList;
-
+	final = yyval.myOperator;
 }
 break;
 case 2:
-#line 71 "Parser.y"
+#line 62 "Parser.y"
 	{
-	/* just return the OrList!*/
-	yyval.myAndList = (struct AndList *) malloc (sizeof (struct AndList));
-	final = yyval.myAndList;
-	yyval.myAndList->left = yystack.l_mark[-1].myOrList;
-	yyval.myAndList->rightAnd = NULL;
+	yyval.myOperator = (struct FuncOperator *) malloc (sizeof (struct FuncOperator));	
+	yyval.myOperator->leftOperator = yystack.l_mark[-3].myOperator;
+	yyval.myOperator->leftOperand = NULL;
+	yyval.myOperator->right = yystack.l_mark[0].myOperator;
+	yyval.myOperator->code = yystack.l_mark[-1].whichOne;	
+
+	final = yyval.myOperator;
 }
 break;
 case 3:
-#line 81 "Parser.y"
-	{ 
-	/* here we have to hang the condition off the left of the OrList*/
-	yyval.myOrList = (struct OrList *) malloc (sizeof (struct OrList));	
-	yyval.myOrList->left = yystack.l_mark[-2].myComparison;
-	yyval.myOrList->rightOr = yystack.l_mark[0].myOrList;
+#line 73 "Parser.y"
+	{
+	yyval.myOperator = yystack.l_mark[-1].myOperator;
+
+	final = yyval.myOperator;
 }
 break;
 case 4:
-#line 89 "Parser.y"
+#line 80 "Parser.y"
 	{
-	/* nothing to hang off of the right*/
-	yyval.myOrList = (struct OrList *) malloc (sizeof (struct OrList));
-	yyval.myOrList->left = yystack.l_mark[0].myComparison;
-	yyval.myOrList->rightOr = NULL;
+	yyval.myOperator = (struct FuncOperator *) malloc (sizeof (struct FuncOperator));	
+	yyval.myOperator->leftOperator = NULL;
+	yyval.myOperator->leftOperand = yystack.l_mark[0].myOperand;
+	yyval.myOperator->right = NULL;	
+
+	final = yyval.myOperator;
 }
 break;
 case 5:
-#line 98 "Parser.y"
+#line 90 "Parser.y"
 	{
-	/* in this case we have a simple literal/variable comparison*/
-	yyval.myComparison = yystack.l_mark[-1].myComparison;
-	yyval.myComparison->left = yystack.l_mark[-2].myOperand;
-	yyval.myComparison->right = yystack.l_mark[0].myOperand;
+	yyval.myOperator = (struct FuncOperator *) malloc (sizeof (struct FuncOperator));	
+	yyval.myOperator->leftOperator = yystack.l_mark[0].myOperator;
+	yyval.myOperator->leftOperand = NULL;
+	yyval.myOperator->right = NULL;	
+	yyval.myOperator->code = '-';
+
+	final = yyval.myOperator;
 }
 break;
 case 6:
-#line 106 "Parser.y"
+#line 102 "Parser.y"
 	{
-	yyval.myComparison = (struct ComparisonOp *) malloc (sizeof (struct ComparisonOp));
-	yyval.myComparison->code = EQUALS;
-	yyval.myComparison->left = yystack.l_mark[0].myOperand;
-	yyval.myComparison->right = yystack.l_mark[0].myOperand;
+	yyval.whichOne = '-';
 }
 break;
 case 7:
-#line 114 "Parser.y"
+#line 107 "Parser.y"
 	{
-	/* construct and send up the comparison*/
-	yyval.myComparison = (struct ComparisonOp *) malloc (sizeof (struct ComparisonOp));
-	yyval.myComparison->code = LESS_THAN;
+	yyval.whichOne = '+';
 }
 break;
 case 8:
-#line 121 "Parser.y"
+#line 112 "Parser.y"
 	{
-	/* construct and send up the comparison*/
-	yyval.myComparison = (struct ComparisonOp *) malloc (sizeof (struct ComparisonOp));
-	yyval.myComparison->code = GREATER_THAN;
+	yyval.whichOne = '*';
 }
 break;
 case 9:
-#line 128 "Parser.y"
+#line 117 "Parser.y"
 	{
-	/* construct and send up the comparison*/
-	yyval.myComparison = (struct ComparisonOp *) malloc (sizeof (struct ComparisonOp));
-	yyval.myComparison->code = EQUALS;
+	yyval.whichOne = '/';
 }
 break;
 case 10:
-#line 136 "Parser.y"
+#line 126 "Parser.y"
 	{
-	/* construct and send up the operand containing the string*/
-	yyval.myOperand = (struct Operand *) malloc (sizeof (struct Operand));
-	yyval.myOperand->code = STRING;
-	yyval.myOperand->value = yystack.l_mark[0].actualChars;
+        /* construct and send up the operand containing the FP number*/
+        yyval.myOperand = (struct FuncOperand *) malloc (sizeof (struct FuncOperand));
+        yyval.myOperand->code = DOUBLE;
+        yyval.myOperand->value = yystack.l_mark[0].actualChars;
 }
 break;
 case 11:
-#line 144 "Parser.y"
+#line 134 "Parser.y"
 	{
-	/* construct and send up the operand containing the FP number*/
-	yyval.myOperand = (struct Operand *) malloc (sizeof (struct Operand));
-	yyval.myOperand->code = DOUBLE;
-	yyval.myOperand->value = yystack.l_mark[0].actualChars;
+        /* construct and send up the operand containing the integer*/
+        yyval.myOperand = (struct FuncOperand *) malloc (sizeof (struct FuncOperand));
+        yyval.myOperand->code = INT;
+        yyval.myOperand->value = yystack.l_mark[0].actualChars;
 }
 break;
 case 12:
-#line 152 "Parser.y"
+#line 142 "Parser.y"
 	{
-	/* construct and send up the operand containing the integer*/
-	yyval.myOperand = (struct Operand *) malloc (sizeof (struct Operand));
-	yyval.myOperand->code = INT;
-	yyval.myOperand->value = yystack.l_mark[0].actualChars;
+        /* construct and send up the operand containing the name*/
+        yyval.myOperand = (struct FuncOperand *) malloc (sizeof (struct FuncOperand));
+        yyval.myOperand->code = NAME;
+        yyval.myOperand->value = yystack.l_mark[0].actualChars;
 }
 break;
-case 13:
-#line 160 "Parser.y"
-	{
-	/* construct and send up the operand containing the name */
-	yyval.myOperand = (struct Operand *) malloc (sizeof (struct Operand));
-	yyval.myOperand->code = NAME;
-	yyval.myOperand->value = yystack.l_mark[0].actualChars;
-}
-break;
-#line 563 "y.tab.c"
+#line 545 "y.tab.c"
     }
     yystack.s_mark -= yym;
     yystate = *yystack.s_mark;
