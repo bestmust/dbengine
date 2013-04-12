@@ -28,14 +28,14 @@
       <in>Schema.h</in>
       <in>Sorted.cpp</in>
       <in>Sorted.h</in>
+      <in>Statistics.cc</in>
+      <in>Statistics.h</in>
       <in>TwoWayList.cc</in>
       <in>TwoWayList.h</in>
       <in>lex.yy.c</in>
       <in>lex.yyfunc.c</in>
       <in>test.cc</in>
-      <in>test.h</in>
       <in>y.tab.c</in>
-      <in>y.tab.h</in>
       <in>yyfunc.tab.c</in>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -136,6 +136,10 @@
       </item>
       <item path="Sorted.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Statistics.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Statistics.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="TwoWayList.cc" ex="false" tool="3" flavor2="0">
       </item>
       <item path="TwoWayList.h" ex="false" tool="3" flavor2="0">
@@ -148,11 +152,7 @@
         <ccTool>
         </ccTool>
       </item>
-      <item path="test.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="y.tab.c" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="y.tab.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="yyfunc.tab.c" ex="false" tool="1" flavor2="0">
       </item>

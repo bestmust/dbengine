@@ -31,6 +31,8 @@
       <in>Schema.h</in>
       <in>Sorted.cpp</in>
       <in>Sorted.h</in>
+      <in>Statistics.cc</in>
+      <in>Statistics.h</in>
       <in>TwoWayList.cc</in>
       <in>TwoWayList.h</in>
       <in>lex.yy.c</in>
