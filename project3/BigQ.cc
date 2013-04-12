@@ -136,10 +136,10 @@ void* RunReaderThread(void *inputToMe) {
 }
 
 void *BigQThread(void *_arg) {
-    cout<<"\nBigQ: thread started";
+    cout << "\nBigQ: thread started";
     BigQarg *arg = (BigQarg *) _arg;
-    BigQ bq(arg->in,arg->out,arg->sortorder,arg->runlen);
-    cout<<"\nBigQ: thread finished";
+    BigQ bq(arg->in, arg->out, arg->sortorder, arg->runlen);
+    cout << "\nBigQ: thread finished";
     pthread_exit(NULL);
 }
 
@@ -152,13 +152,15 @@ public:
 
 #if MANUALTEST
     Schema *tempSchema;
+
     InPutToWorkerThread(Pipe &_in, Pipe &_out, OrderMaker &_sortorder, int _runlen, Schema* _tempSchema) : in(_in), out(_out), sortorder(_sortorder) {
 
         runlen = _runlen;
         tempSchema = _tempSchema;
     }
 #else
-        InPutToWorkerThread(Pipe &_in, Pipe &_out, OrderMaker &_sortorder, int _runlen) : in(_in), out(_out), sortorder(_sortorder) {
+
+    InPutToWorkerThread(Pipe &_in, Pipe &_out, OrderMaker &_sortorder, int _runlen) : in(_in), out(_out), sortorder(_sortorder) {
 
         runlen = _runlen;
     }
@@ -353,7 +355,7 @@ void* QWorkerThread(void *inputToMe) {
     //Delete the file
     std::remove(fileName);
 
-  out.ShutDown();
+    out.ShutDown();
     pthread_exit(NULL);
 }
 #if MANUALTEST
@@ -363,7 +365,7 @@ BigQ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen, Schema* tempS
     InPutToWorkerThread *workOnThisData = new InPutToWorkerThread(in, out, sortorder, runlen, tempSchema);
 #else
 
-BigQ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen){
+BigQ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
     pthread_t workerThread;
     InPutToWorkerThread *workOnThisData = new InPutToWorkerThread(in, out, sortorder, runlen);
 #endif
@@ -371,7 +373,7 @@ BigQ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen){
     pthread_create(&workerThread, NULL, QWorkerThread, (void*) workOnThisData);
     //Read page to determine how many pages have been read;
     void *status;
-    
+
     /* do not wait for the thread to end.
     int rc = pthread_join(workerThread, &status);
         if (rc) {

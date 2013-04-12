@@ -269,7 +269,7 @@ void GroupBy::Operation() {
 
     //first we will create the attsToKeep array of attributes to be used in the merge operation.
     int omAtts = g_groupAtts->numAtts;
-    ; //total attributes in the ordermaker
+    //total attributes in the ordermaker
     int totalAtts = omAtts + 1; //attributes in output
 
     int attsToKeep[totalAtts]; //used for the merge operation
@@ -477,6 +477,83 @@ void Join::Run(Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &
 
 void Join::Operation() {
 
+    OrderMaker omLeft, omRight;
+    Pipe sortedLeft(PIPE_BUFF_SIZE), sortedRight(PIPE_BUFF_SIZE);
+    ComparisonEngine comp;
+    Record recLeft, recRight, outRec;
+    int comparisonResult;
+    //now create the datastructure for the merge operation.
+    int totalAtts = (omLeft.numAtts + omRight.numAtts), startOfRight = omLeft.numAtts, leftNumAtts, rightNumAtts;
+    int whichAtts[40];
+    int i, j;
+
+    int ret;
+
+    ret = j_selOp->GetSortOrders(omLeft, omRight);
+
+    if (ret == 0) {
+        //do nested block join
+    } else {
+
+        //start both the BigQ
+        BigQ bqL(*j_inPipeL, sortedLeft, omLeft, runLength);
+        BigQ bqR(*j_inPipeR, sortedRight, omRight, runLength);
+
+        //save the sequece of attributes.
+        for (i = 0; i < omLeft.numAtts; i++) {
+            whichAtts[i] = omLeft.whichAtts[i];
+        }
+        for (i = omLeft.numAtts, j = 0; j < omRight.numAtts; i++, j++) {
+            whichAtts[i] = omRight.whichAtts[j];
+        }
+
+        if (sortedLeft.Remove(&recLeft) && sortedRight.Remove(&recRight)) {
+
+
+            //creating the datastructure for the merge operation considering all attributes.
+            leftNumAtts = ((int*) recLeft.bits)[1] / sizeof (int) - 1;
+            rightNumAtts = ((int*) recRight.bits)[1] / sizeof (int) - 1;
+            totalAtts = leftNumAtts + rightNumAtts;
+            startOfRight = leftNumAtts;
+            for (i = 0; i < leftNumAtts; i++) {
+                whichAtts[i] = i;
+            }
+            for (i = startOfRight, j = 0; j < rightNumAtts; i++, j++) {
+                whichAtts[i] = j;
+            }
+
+
+            while (true) {
+                comparisonResult = comp.Compare(&recLeft, &omLeft, &recRight, &omRight);
+
+                if (comparisonResult == 0) {
+                    //there is a match. now merge the records and insert in the output pipe and remove new records from both pipes.
+                    outRec.MergeRecords(&recLeft, &recRight, leftNumAtts, rightNumAtts, whichAtts, totalAtts, startOfRight);
+                    j_outPipe->Insert(&outRec);
+
+                    //remove the new left and right records.
+                    if ((sortedLeft.Remove(&recLeft) && sortedRight.Remove(&recRight)) == 0) {
+                        break;
+                    }
+                } else if (comparisonResult < 0) {
+                    //left is less than right so increase left and check if its over.
+                    if (sortedLeft.Remove(&recLeft) == 0) {
+                        break;
+                    }
+                } else if (comparisonResult > 0) {
+                    //right is less so increment right and check if its over.
+                    if (sortedRight.Remove(&recRight) == 0) {
+                        break;
+                    }
+                }
+
+            }
+
+        }
+
+    }
+
+    j_outPipe->ShutDown();
 }
 
 void Join::WaitUntilDone() {
