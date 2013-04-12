@@ -1,6 +1,8 @@
 #include "RelOp.h"
 #include "BigQ.h"
 #include <unistd.h>
+#include <ostream>
+#include <fstream>
 
 void* SF_Thread(void *sf_currentObj) {
 
@@ -280,7 +282,7 @@ void GroupBy::Operation() {
     // cop[y rest of the attributes from the ordermaker.
     for (i = 0; i < omAtts; i++) {
         attsToKeep[i + 1] = g_groupAtts->whichAtts[i];
-    }
+                }
 
     //the type of the result of sum
     Type resultType = Double;
@@ -292,14 +294,14 @@ void GroupBy::Operation() {
         finalIntResult += intResult;
     } else if (resultType == Double) {
         finalDoubleResult += doubleResult;
-    }
+                }
 
     //now remove all the next records compare, apply function and insert the new records.
     i = 1;
     while (sortedOut.Remove(&rec[i % 2])) {
 
         //if the records are not equal then first merge and insert the second last removed record in output pipe.
-        if (comp.Compare(&rec[0], &rec[1], g_groupAtts) == 0) {
+        if (comp.Compare(&rec[0], &rec[1], g_groupAtts) != 0) {
 
             if (resultType == Int) {
                 sumResultRec.ComposeRecord(finalIntResult);
@@ -319,9 +321,9 @@ void GroupBy::Operation() {
             finalIntResult += intResult;
         } else if (resultType == Double) {
             finalDoubleResult += doubleResult;
-        }
-        i++;
     }
+        i++;
+        }
 
     //insert the last record.
     if (resultType == Int) {
@@ -336,7 +338,7 @@ void GroupBy::Operation() {
 
     g_outPipe->ShutDown();
 
-}
+    }
 
 void GroupBy::WaitUntilDone() {
     pthread_join(thread, NULL);
@@ -538,7 +540,7 @@ void Join::Operation() {
         //SORT MERGE JOIN
         BigQ jn_bqLeft(*(this->j_inPipeL), *(bigQLeftSorted), *om_Left,
                 this->runLength);
-        sleep(1);
+        //sleep(1);
         BigQ jn_bqRight(*(this->j_inPipeR), *(bigQRightSorted), *om_Right,
                 this->runLength);
 
@@ -634,7 +636,7 @@ void Join::Operation() {
                         != recordVectorLeft.end(); itrLeft++) {
                     for (itrRight = recordVectorRight.begin(); itrRight
                             != recordVectorRight.end(); itrRight++) {
-                        resultofComparison = compEng.Compare(*itrLeft,*itrRight, j_literal, j_selOp);
+                        resultofComparison = compEng.Compare(*itrLeft, *itrRight, j_literal, j_selOp);
                         if (resultofComparison == 1) {
                             record.MergeRecords(*itrLeft, *itrRight,
                                     numAttsLeft, numAttsRight, attsToKeep,
@@ -701,8 +703,7 @@ void Join::Operation() {
                         }
                     }
                 }
-            }
-                //case 2 when left is less that right
+            }//case 2 when left is less that right
             else if (result < 0) {
                 //Step1: if nomore records in either of the pipes than you can safely exit the while loops
                 if (setleft == 0) {
@@ -741,8 +742,7 @@ void Join::Operation() {
                         }
                     }
                 }
-            }
-                //case 3 when right is greater than left
+            }//case 3 when right is greater than left
             else {
                 //Step1: if nomore records in either of the pipes than you can safely exit the while loops
                 if (setright == 0) {
@@ -789,8 +789,7 @@ void Join::Operation() {
         bigQRightSorted->ShutDown();
         (this->j_outPipe)->ShutDown();
 
-    }
-        //BLOCK NESTED LOOP JOIN BEGINS
+    }//BLOCK NESTED LOOP JOIN BEGINS
     else {
         //First insert the records of right pipe into the temp dbfile
         dbfile.Create("dbfile.bin", heap, NULL);
@@ -807,8 +806,7 @@ void Join::Operation() {
             if ((this->j_inPipeL)->Remove(&leftRecord) && (counter < 5000)) {
                 recordVector.push_back(&leftRecord);
                 counter++;
-            }
-            else {
+            } else {
                 //Case1
                 //if the counter becomes equal to 3000 than compare each record in dbfile with every record in record vector
                 if (counter == 5000) {
@@ -817,7 +815,7 @@ void Join::Operation() {
                     while (dbfile.GetNext(rightRecord) == 1) {
                         for (itr = recordVector.begin(); itr
                                 != recordVector.end(); itr++) {
-                            resultofComparison = compEng.Compare(*itr,&rightRecord, j_literal, j_selOp);
+                            resultofComparison = compEng.Compare(*itr, &rightRecord, j_literal, j_selOp);
                             if (resultofComparison == 1) {
                                 record.MergeRecords(*itr, &rightRecord,
                                         numAttsLeft, numAttsRight, attsToKeep,
@@ -829,15 +827,14 @@ void Join::Operation() {
                     recordVector.clear();
                     recordVector.push_back(&leftRecord);
                     counter++;
-                }
-                    //Case2
+                }//Case2
                     //In this case the counter was less than 5000 but the pipe becomes empty
                 else {
                     dbfile.MoveFirst();
                     while (dbfile.GetNext(rightRecord) == 1) {
                         for (itr = recordVector.begin(); itr
                                 != recordVector.end(); itr++) {
-                            resultofComparison = compEng.Compare(*itr,&rightRecord, j_literal, j_selOp);
+                            resultofComparison = compEng.Compare(*itr, &rightRecord, j_literal, j_selOp);
                             if (resultofComparison == 1) {
                                 record.MergeRecords(*itr, &rightRecord,
                                         numAttsLeft, numAttsRight, attsToKeep,
