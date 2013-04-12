@@ -513,3 +513,106 @@ void Record :: PrintToFile (FILE *myFile,Schema *mySchema) {
 
 	fprintf(myFile,"\n");
 }
+
+
+int Record :: ComposeRecord (int intSrc) {
+
+	// this is temporary storage
+	char *recSpace = new (std::nothrow) char[PAGE_SIZE];
+	if (recSpace == NULL)
+	{
+		cout << "ERROR : Not enough memory. EXIT !!!\n";
+		exit(1);
+	}
+
+	// clear out the present record
+	if (bits != NULL) 
+		delete [] bits;
+	bits = NULL;
+
+	// this is the current position (int bytes) in the binary
+	// representation of the record that we are dealing with
+	int currentPosInRec = sizeof (int);
+		
+	// set up the pointer to the current attribute in the record
+	((int *) recSpace)[1] = currentPosInRec;
+
+	// then we convert the data to the correct binary representation
+	*((int *) &(recSpace[currentPosInRec])) = intSrc;	
+	currentPosInRec += sizeof (int);
+
+	// the last thing is to set up the pointer to just past the end of the reocrd
+	((int *) recSpace)[0] = currentPosInRec;
+
+	// and copy over the bits
+	bits = new (std::nothrow) char[currentPosInRec];
+	if (bits == NULL)
+	{
+		cout << "ERROR : Not enough memory. EXIT !!!\n";
+		exit(1);
+	}
+
+	memcpy (bits, recSpace, currentPosInRec);	
+
+	delete [] recSpace;
+
+	return 1;
+}
+
+int Record :: ComposeRecord (double doubleSrc) {
+
+	// this is temporary storage
+	char *recSpace = new (std::nothrow) char[PAGE_SIZE];
+	if (recSpace == NULL)
+	{
+		cout << "ERROR : Not enough memory. EXIT !!!\n";
+		exit(1);
+	}
+
+	// clear out the present record
+	if (bits != NULL) 
+		delete [] bits;
+	bits = NULL;
+        
+        /* the below three instructions are basically doing 
+         * 
+         * int currentPosInRec = sizeof (double);
+         * 
+         * but for better understanding i have written it like the other functions.
+         */
+
+	// this is the current position (int bytes) in the binary
+	// representation of the record that we are dealing with
+	int currentPosInRec = sizeof (int);
+		
+	// set up the pointer to the current attribute in the record
+	((int *) recSpace)[1] = currentPosInRec;
+        
+        // make sure that we are starting at a double-aligned position;
+	// if not, then we put some extra space in there
+	while (currentPosInRec % sizeof(double) != 0) {
+		currentPosInRec += sizeof (int);
+		((int *) recSpace)[1] = currentPosInRec;
+	}
+
+	// then we convert the data to the correct binary representation
+	*((double *) &(recSpace[currentPosInRec])) = doubleSrc;	
+	currentPosInRec += sizeof (double);
+
+	// the last thing is to set up the pointer to just past the end of the record
+	((int *) recSpace)[0] = currentPosInRec;
+
+	// and copy over the bits
+	bits = new (std::nothrow) char[currentPosInRec];
+	if (bits == NULL)
+	{
+		cout << "ERROR : Not enough memory. EXIT !!!\n";
+		exit(1);
+	}
+
+	memcpy (bits, recSpace, currentPosInRec);	
+
+	delete [] recSpace;
+
+	return 1;
+}

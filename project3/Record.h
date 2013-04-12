@@ -51,6 +51,12 @@ public:
 	int SuckNextRecord (Schema *mySchema, FILE *textFile);
 
 	int ComposeRecord (Schema *mySchema, const char *src);
+        
+        //this is overloaded function to create the record with just one integer value. It will have just one attribute.
+        int ComposeRecord(int intSrc);
+        
+        //Similar to above function except that the record is created from a double.
+        int ComposeRecord(double doubleSrc);
 
 	// this projects away various attributes... 
 	// the array attsToKeep should be sorted, and lists all of the attributes

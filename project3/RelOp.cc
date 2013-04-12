@@ -1,7 +1,5 @@
 #include "RelOp.h"
 #include "BigQ.h"
-#include <sstream>
-#include <fstream>
 
 void* SF_Thread(void *sf_currentObj) {
     
@@ -299,11 +297,8 @@ void Sum::Operation () {
     Type ret=Double; // Initialize to atleast print 0 and not give an error
     int intResult,finalIntResult=0;
     double doubleResult,finalDoubleResult=0;
-    
-    stringstream strResultStream;
-    string str, out;
-    char *name = "tempSumSchema";
-    
+  
+    //efficiently fine out the sum and save it.
     if(s_inPipe->Remove(&rec)) {
         ret = s_computeMe->Apply(rec,intResult,doubleResult);
         if(ret==Int) {
@@ -324,10 +319,17 @@ void Sum::Operation () {
             cout<<"Wront type returned by Apply function in Function. Error called from Sum::Operation";
         }
     }
+    /*
+     * The following code in comment is obsolete. But it is kept to demonstrate how simple it is to compose record
+     * without creating new schema, directly from the integer/double values.
+     * 
+    //create a new schema. and then try to create the new record.
+    stringstream strResultStream;
+    string str, out;
+    char *name = "tempSumSchema";
     
     outRec.bits =new (std::nothrow) char[sizeof(double)];
     
-    s_inPipe->ShutDown();
         ofstream fout(name);
         fout << "BEGIN" << endl;
         fout << "SUM_table" << endl;
@@ -354,9 +356,20 @@ void Sum::Operation () {
         }
         const char*src = str.c_str();
         outRec.ComposeRecord(&mySchema, src);
+        remove(name);
+        */
+    
+        //Compuse a new record based on the integer or double result.
+        if (ret == Int) {
+            outRec.ComposeRecord(finalIntResult);
+        } else if (ret == Double){
+            outRec.ComposeRecord(finalDoubleResult);
+        }
+        
+        //insert the new record in the output pipe and 
         s_outPipe->Insert(&outRec);
         s_outPipe->ShutDown();
-        remove(name);
+        
 }
 
 void Sum::WaitUntilDone () {
