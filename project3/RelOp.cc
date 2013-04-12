@@ -1,5 +1,6 @@
 #include "RelOp.h"
 #include "BigQ.h"
+#include <unistd.h>
 
 void* SF_Thread(void *sf_currentObj) {
 
@@ -298,7 +299,7 @@ void GroupBy::Operation() {
     while (sortedOut.Remove(&rec[i % 2])) {
 
         //if the records are not equal then first merge and insert the second last removed record in output pipe.
-        if (comp.Compare(&rec[0], &rec[1], g_groupAtts) != 0) {
+        if (comp.Compare(&rec[0], &rec[1], g_groupAtts) == 0) {
 
             if (resultType == Int) {
                 sumResultRec.ComposeRecord(finalIntResult);
@@ -476,84 +477,386 @@ void Join::Run(Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &
 }
 
 void Join::Operation() {
-
-    OrderMaker omLeft, omRight;
-    Pipe sortedLeft(PIPE_BUFF_SIZE), sortedRight(PIPE_BUFF_SIZE);
-    ComparisonEngine comp;
-    Record recLeft, recRight, outRec;
-    int comparisonResult;
-    //now create the datastructure for the merge operation.
-    int totalAtts = (omLeft.numAtts + omRight.numAtts), startOfRight = omLeft.numAtts, leftNumAtts, rightNumAtts;
-    int whichAtts[40];
-    int i, j;
-
-    int ret;
-
-    ret = j_selOp->GetSortOrders(omLeft, omRight);
-
-    if (ret == 0) {
-        //do nested block join
-    } else {
-
-        //start both the BigQ
-        BigQ bqL(*j_inPipeL, sortedLeft, omLeft, runLength);
-        BigQ bqR(*j_inPipeR, sortedRight, omRight, runLength);
-
-        //save the sequece of attributes.
-        for (i = 0; i < omLeft.numAtts; i++) {
-            whichAtts[i] = omLeft.whichAtts[i];
-        }
-        for (i = omLeft.numAtts, j = 0; j < omRight.numAtts; i++, j++) {
-            whichAtts[i] = omRight.whichAtts[j];
-        }
-
-        if (sortedLeft.Remove(&recLeft) && sortedRight.Remove(&recRight)) {
+    // Create ordermaker for left and right input pipes using getsortorders
+    // If OrderMaker has been created Use BigQ to sort both pipes
+    // Merge the two pipes using merge function
+    // If Ordermaker has not been created (not an equality check then use block nested loop join
 
 
-            //creating the datastructure for the merge operation considering all attributes.
-            leftNumAtts = ((int*) recLeft.bits)[1] / sizeof (int) - 1;
-            rightNumAtts = ((int*) recRight.bits)[1] / sizeof (int) - 1;
-            totalAtts = leftNumAtts + rightNumAtts;
-            startOfRight = leftNumAtts;
-            for (i = 0; i < leftNumAtts; i++) {
-                whichAtts[i] = i;
-            }
-            for (i = startOfRight, j = 0; j < rightNumAtts; i++, j++) {
-                whichAtts[i] = j;
-            }
+    //parameters for sort-merge join
+    OrderMaker *om_Left = new OrderMaker;
+    OrderMaker *om_Right = new OrderMaker;
+    Pipe *bigQLeftSorted = new Pipe(10000000);
+    Pipe *bigQRightSorted = new Pipe(10000000);
 
+    Record *lRecord, *rRecord, *templeft, *tempright, record;
+    vector<Record *> recordVectorLeft;
+    vector<Record *> recordVectorRight;
+    vector<Record*>::iterator itrLeft;
+    vector<Record*>::iterator itrRight;
+    bool blnFirst = true;
+    int leftisEmpty = 0, rightisEmpty = 0, templeftflag = 0, temprightflag = 0;
+    //this flag when set indicates that the pipes are empty
+    int nomoreleftrecs = 0, nomorerightrecs = 0, setleft = 0, setright = 0;
 
-            while (true) {
-                comparisonResult = comp.Compare(&recLeft, &omLeft, &recRight, &omRight);
+    //parameters for block-nested join
+    DBFile dbfile;
+    Record leftRecord, rightRecord;
+    Page page;
+    int flagtoDetermineEndofAddRecord = 0;
+    vector<Record *> recordVector;
+    vector<Record*>::iterator itr;
+    Record *tmpRecord;
 
-                if (comparisonResult == 0) {
-                    //there is a match. now merge the records and insert in the output pipe and remove new records from both pipes.
-                    outRec.MergeRecords(&recLeft, &recRight, leftNumAtts, rightNumAtts, whichAtts, totalAtts, startOfRight);
-                    j_outPipe->Insert(&outRec);
+    //parameters for comparison
+    ComparisonEngine compEng;
+    int result = 0, resultofComparison = 0;
 
-                    //remove the new left and right records.
-                    if ((sortedLeft.Remove(&recLeft) && sortedRight.Remove(&recRight)) == 0) {
+    //parameters for generating the schema
+    int numAttsLeft = 0, numAttsRight = 0;
+    int *attsToKeep;
+    int numAttsToKeep = 0, startOfRight = 0, i;
+
+    //get the numAtts for both left input Pipe and right input Pipe using the Schema
+    numAttsLeft = 7;
+    numAttsRight = 5;
+    int size = numAttsLeft + numAttsRight;
+    attsToKeep = (int *) malloc(size * sizeof (int));
+    for (i = 0; i < numAttsLeft; i++) {
+        attsToKeep[i] = i;
+        numAttsToKeep++;
+    }
+    startOfRight = i;
+    for (int k = 0, j = numAttsLeft; k < numAttsRight; k++, j++) {
+        attsToKeep[j] = k;
+        numAttsToKeep++;
+    }
+
+    //JOIN OPERATION BEGINS
+    int ret_OM = this->j_selOp->GetSortOrders(*om_Left, *om_Right);
+    if (ret_OM != 0) {
+        //SORT MERGE JOIN
+        BigQ jn_bqLeft(*(this->j_inPipeL), *(bigQLeftSorted), *om_Left,
+                this->runLength);
+        sleep(1);
+        BigQ jn_bqRight(*(this->j_inPipeR), *(bigQRightSorted), *om_Right,
+                this->runLength);
+
+        while (true) {
+            if (blnFirst) {
+                //fill the left vector untill first non-matching records
+                while (true) {
+                    lRecord = new Record;
+                    //break the while loop when no more records in the left pipe
+                    if (!bigQLeftSorted->Remove(lRecord)) {
+                        nomoreleftrecs = 1;
                         break;
-                    }
-                } else if (comparisonResult < 0) {
-                    //left is less than right so increase left and check if its over.
-                    if (sortedLeft.Remove(&recLeft) == 0) {
-                        break;
-                    }
-                } else if (comparisonResult > 0) {
-                    //right is less so increment right and check if its over.
-                    if (sortedRight.Remove(&recRight) == 0) {
-                        break;
+                    } else {
+                        if (templeftflag == 0) {
+                            templeft = new Record;
+                            templeft = lRecord;
+                            recordVectorLeft.push_back(lRecord);
+                            templeftflag = 1;
+                        } else {
+                            result = compEng.Compare(lRecord, om_Left,
+                                    templeft, om_Left);
+                            if (result == 0) {
+                                recordVectorLeft.push_back(lRecord);
+                            } else {
+                                break;
+                            }
+                        }
                     }
                 }
 
+                //fill the right vector untill first non-matching records
+                while (true) {
+                    rRecord = new Record;
+                    //break the while loop when no more records in the left pipe
+                    if (!bigQRightSorted->Remove(rRecord)) {
+                        nomorerightrecs = 1;
+                        break;
+                    } else {
+                        if (temprightflag == 0) {
+                            //just store the first record in the temporarily to compare it with the other records while filling the record vector
+                            tempright = new Record;
+                            tempright = rRecord;
+                            recordVectorRight.push_back(rRecord);
+                            temprightflag = 1;
+                        } else {
+                            result = compEng.Compare(rRecord, om_Right,
+                                    tempright, om_Right);
+                            if (result == 0) {
+                                recordVectorRight.push_back(rRecord);
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                blnFirst = false;
+            }
+            templeft = new Record();
+            tempright = new Record();
+            if (!recordVectorLeft.empty()) {
+                templeft = recordVectorLeft.front();
+            } else
+                leftisEmpty = 1;
+
+            if (!recordVectorRight.empty()) {
+                tempright = recordVectorRight.front();
+            } else
+                rightisEmpty = 1;
+
+            if ((leftisEmpty == 0) && (rightisEmpty == 0)) {
+                result
+                        = compEng.Compare(templeft, om_Left, tempright,
+                        om_Right);
+            } else {
+                break;
             }
 
+            //now check for conditions when the remaining records in recordvector are greater than the records in the other pipe which stil has records
+            if ((nomoreleftrecs == 1) && result > 0) {
+                setright = 1;
+            }
+
+            if ((nomorerightrecs == 1) && result < 0) {
+                setleft = 1;
+            }
+
+            if (result == 0) {
+                // Step 1:now compare each and every record in left vector to each and every record in right vector
+                //            merge them and insert into outputPipe
+                // Step 2:empty out both the record vectors once all records are done
+                // Step 3: insert fresh records into the both the pipes
+                for (itrLeft = recordVectorLeft.begin(); itrLeft
+                        != recordVectorLeft.end(); itrLeft++) {
+                    for (itrRight = recordVectorRight.begin(); itrRight
+                            != recordVectorRight.end(); itrRight++) {
+                        resultofComparison = compEng.Compare(*itrLeft,*itrRight, j_literal, j_selOp);
+                        if (resultofComparison == 1) {
+                            record.MergeRecords(*itrLeft, *itrRight,
+                                    numAttsLeft, numAttsRight, attsToKeep,
+                                    numAttsToKeep, startOfRight);
+                            (this->j_outPipe)->Insert(&record);
+                        }
+                    }
+                }
+                recordVectorLeft.clear();
+                recordVectorRight.clear();
+
+                //if nomore records in either of the pipes than you can safely exit the while loops
+                if ((nomoreleftrecs == 1) || (nomorerightrecs == 1)) {
+                    if (nomoreleftrecs == 1)
+                        delete lRecord;
+                    if (nomorerightrecs == 1)
+                        delete rRecord;
+                    break;
+                }
+
+                //since the last remove of both the pipes was not pushed into the vector we insert it now and than delete those record pointer
+
+                recordVectorLeft.push_back(lRecord);
+                templeft = new Record;
+
+                templeft = lRecord;
+
+                recordVectorRight.push_back(rRecord);
+                tempright = new Record;
+                tempright = rRecord;
+
+                //fill the left vector untill first non-matching records
+                while (true) {
+                    lRecord = new Record;
+                    //break the while loop when no more records in the left pipe
+                    if (!bigQLeftSorted->Remove(lRecord)) {
+                        nomoreleftrecs = 1;
+                        break;
+                    } else {
+                        result = compEng.Compare(lRecord, om_Left, templeft,
+                                om_Left);
+                        if (result == 0) {
+                            recordVectorLeft.push_back(lRecord);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                //fill the right vector untill first non-matching records
+                while (true) {
+                    rRecord = new Record;
+                    //break the while loop when no more records in the left pipe
+                    if (!bigQRightSorted->Remove(rRecord)) {
+                        nomorerightrecs = 1;
+                        break;
+                    } else {
+                        result = compEng.Compare(rRecord, om_Right, tempright,
+                                om_Right);
+                        if (result == 0) {
+                            recordVectorRight.push_back(rRecord);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+                //case 2 when left is less that right
+            else if (result < 0) {
+                //Step1: if nomore records in either of the pipes than you can safely exit the while loops
+                if (setleft == 0) {
+                    if ((nomoreleftrecs == 1) || (nomorerightrecs == 1)) {
+                        if (nomoreleftrecs == 1)
+                            delete lRecord;
+                        if (nomorerightrecs == 1)
+                            delete rRecord;
+                        break;
+                    }
+                } else
+                    setleft = 0;
+
+                //Step2: empty out the records from left vector and fill them with new records untill the first non matching record you get
+                recordVectorLeft.clear();
+
+                //Step3: push the record of left pipe only as in right pipe  there are still records and than delete those record pointers
+                recordVectorLeft.push_back(lRecord);
+                templeft = new Record;
+                templeft = lRecord;
+
+                //Step4: fill the left vector untill first non-matching records
+                while (true) {
+                    lRecord = new Record;
+                    //break the while loop when no more records in the left pipe
+                    if (!bigQLeftSorted->Remove(lRecord)) {
+                        nomoreleftrecs = 1;
+                        break;
+                    } else {
+                        result = compEng.Compare(lRecord, om_Left, templeft,
+                                om_Left);
+                        if (result == 0) {
+                            recordVectorLeft.push_back(lRecord);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+                //case 3 when right is greater than left
+            else {
+                //Step1: if nomore records in either of the pipes than you can safely exit the while loops
+                if (setright == 0) {
+                    if ((nomoreleftrecs == 1) || (nomorerightrecs == 1)) {
+                        if (nomoreleftrecs == 1)
+                            delete lRecord;
+                        if (nomorerightrecs == 1)
+                            delete rRecord;
+                        break;
+                    }
+                } else
+                    setright = 0;
+
+                //Step2: empty out the records from right vector and fill them with new records untill the first non matching record you get
+                recordVectorRight.clear();
+
+                //Step3: push the record of right pipe only as in left pipe  there are still records and than delete those record pointers
+                recordVectorRight.push_back(rRecord);
+                tempright = new Record;
+                tempright = rRecord;
+
+                //Step4: fill the left vector untill first non-matching records
+                while (true) {
+                    rRecord = new Record;
+                    //break the while loop when no more records in the left pipe
+                    if (!bigQRightSorted->Remove(rRecord)) {
+                        nomorerightrecs = 1;
+                        break;
+                    } else {
+                        result = compEng.Compare(rRecord, om_Right, tempright,
+                                om_Right);
+                        if (result == 0) {
+                            recordVectorRight.push_back(rRecord);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            leftisEmpty = 0;
+            rightisEmpty = 0;
+        }
+        bigQLeftSorted->ShutDown();
+        bigQRightSorted->ShutDown();
+        (this->j_outPipe)->ShutDown();
+
+    }
+        //BLOCK NESTED LOOP JOIN BEGINS
+    else {
+        //First insert the records of right pipe into the temp dbfile
+        dbfile.Create("dbfile.bin", heap, NULL);
+        while ((this->j_inPipeR)->Remove(&rightRecord)) {
+            dbfile.Add(rightRecord);
+        }
+        dbfile.Close();
+        //Now first load the records of left pipe into the page in memory and for each record in page scan through the dbfile to
+        //to obtain a matching record.if record matches than merge them else continue
+        dbfile.Open("dbfile.bin");
+        int counter = 0;
+        while (true) {
+            //insert the records into the recordVector
+            if ((this->j_inPipeL)->Remove(&leftRecord) && (counter < 5000)) {
+                recordVector.push_back(&leftRecord);
+                counter++;
+            }
+            else {
+                //Case1
+                //if the counter becomes equal to 3000 than compare each record in dbfile with every record in record vector
+                if (counter == 5000) {
+                    counter = 0;
+                    dbfile.MoveFirst();
+                    while (dbfile.GetNext(rightRecord) == 1) {
+                        for (itr = recordVector.begin(); itr
+                                != recordVector.end(); itr++) {
+                            resultofComparison = compEng.Compare(*itr,&rightRecord, j_literal, j_selOp);
+                            if (resultofComparison == 1) {
+                                record.MergeRecords(*itr, &rightRecord,
+                                        numAttsLeft, numAttsRight, attsToKeep,
+                                        numAttsToKeep, startOfRight);
+                                (this->j_outPipe)->Insert(&record);
+                            }
+                        }
+                    }
+                    recordVector.clear();
+                    recordVector.push_back(&leftRecord);
+                    counter++;
+                }
+                    //Case2
+                    //In this case the counter was less than 5000 but the pipe becomes empty
+                else {
+                    dbfile.MoveFirst();
+                    while (dbfile.GetNext(rightRecord) == 1) {
+                        for (itr = recordVector.begin(); itr
+                                != recordVector.end(); itr++) {
+                            resultofComparison = compEng.Compare(*itr,&rightRecord, j_literal, j_selOp);
+                            if (resultofComparison == 1) {
+                                record.MergeRecords(*itr, &rightRecord,
+                                        numAttsLeft, numAttsRight, attsToKeep,
+                                        numAttsToKeep, startOfRight);
+                                (this->j_outPipe)->Insert(&record);
+                            }
+                        }
+                    }
+                    recordVector.clear();
+                    remove("dbfile.bin");
+                    remove("dbfile.bin.meta");
+                    dbfile.Close();
+                    break;
+                }
+            }
         }
 
     }
-
-    j_outPipe->ShutDown();
+    (this->j_outPipe)->ShutDown();
 }
 
 void Join::WaitUntilDone() {
