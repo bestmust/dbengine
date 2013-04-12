@@ -849,7 +849,7 @@ void Join::Operation() {
                     }
                     recordVector.clear();
                     remove("dbfile.bin");
-                    remove("dbfile.bin.meta");
+                    remove("dbfile.bin.info");
                     dbfile.Close();
                     break;
                 }
