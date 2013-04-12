@@ -114,6 +114,8 @@ void DuplicateRemoval::Operation () {
     OrderMaker dr_orderMaker(dr_mySchema);
     Pipe sortedOut(PIPE_BUFF_SIZE);
     
+    //the code in the comment is to create the BigQ thread. but now it is not needed.
+    /*
     BigQarg arg={*dr_inPipe,sortedOut,dr_orderMaker,runLength};
     
     pthread_t BigQ_thread;
@@ -124,6 +126,8 @@ void DuplicateRemoval::Operation () {
         {
             cout<<"\n Error while creating the BigQ Thread error# ";
         }
+     */
+    BigQ bq(*dr_inPipe,sortedOut,dr_orderMaker,runLength);
     
     Record rec,recNext;
     ComparisonEngine comp;
@@ -259,6 +263,39 @@ void GroupBy::Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function 
 }
 
 void GroupBy::Operation () {
+    /*
+    Pipe sortedOut(PIPE_BUFF_SIZE);
+    
+    BigQ bq(*g_inPipe,sortedOut,*g_groupAtts,runLength);
+    /*
+    pthread_t BigQ_thread;
+    
+    int error = pthread_create(&BigQ_thread, NULL,BigQThread,(void *) &arg);
+        
+        if(error)
+        {
+            cout<<"\n Error while creating the BigQ Thread error# ";
+        }
+     */
+    /*
+    Record rec,recNext;
+    ComparisonEngine comp;
+    
+    if(sortedOut.Remove(&rec))
+    {
+        while(sortedOut.Remove(&recNext))
+        {
+            if(comp.Compare(&rec,&recNext,&dr_orderMaker)!=0)
+            {
+                dr_outPipe->Insert(&rec);
+                rec=recNext;
+            }
+        }
+        dr_outPipe->Insert(&rec);
+    }
+    
+    dr_outPipe->ShutDown();
+    */
     
 }
 

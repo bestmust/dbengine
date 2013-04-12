@@ -371,12 +371,14 @@ BigQ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen){
     pthread_create(&workerThread, NULL, QWorkerThread, (void*) workOnThisData);
     //Read page to determine how many pages have been read;
     void *status;
-    //wait for thread to end;
+    
+    /* do not wait for the thread to end.
     int rc = pthread_join(workerThread, &status);
         if (rc) {
          printf("ERROR; return code from pthread_join() is %d\n", rc);
          exit(-1);
          }
+     */
 }
 
 BigQ::~BigQ() {
