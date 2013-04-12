@@ -366,7 +366,7 @@ BigQ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen, Schema* tempS
 #else
 
 BigQ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
-    pthread_t workerThread;
+    
     InPutToWorkerThread *workOnThisData = new InPutToWorkerThread(in, out, sortorder, runlen);
 #endif
 
@@ -384,4 +384,9 @@ BigQ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 }
 
 BigQ::~BigQ() {
+}
+
+void BigQ::WaitUntilDone() {
+    pthread_join(workerThread, NULL);
+    cout<<"\nBigQ ended.\n";
 }

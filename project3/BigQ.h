@@ -18,6 +18,7 @@ typedef struct BigQArguments {
 
 class BigQ {
 private:
+    pthread_t workerThread;
 public:
 #if MANUALTEST
     BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen, Schema *);
@@ -26,6 +27,9 @@ public:
 
 #endif
     ~BigQ();
+    
+    void WaitUntilDone();
+    
 };
 
 void *BigQThread(void *_arg);

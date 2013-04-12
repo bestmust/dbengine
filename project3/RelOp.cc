@@ -144,7 +144,7 @@ void DuplicateRemoval::Operation() {
     }
 
     dr_outPipe->ShutDown();
-
+    bq.WaitUntilDone();
 }
 
 void DuplicateRemoval::WaitUntilDone() {
@@ -488,8 +488,8 @@ void Join::Operation() {
     //parameters for sort-merge join
     OrderMaker *om_Left = new OrderMaker;
     OrderMaker *om_Right = new OrderMaker;
-    Pipe *bigQLeftSorted = new Pipe(10000000);
-    Pipe *bigQRightSorted = new Pipe(10000000);
+    Pipe *bigQLeftSorted = new Pipe(PIPE_BUFF_SIZE);
+    Pipe *bigQRightSorted = new Pipe(PIPE_BUFF_SIZE);
 
     Record *lRecord, *rRecord, *templeft, *tempright, record;
     vector<Record *> recordVectorLeft;
@@ -519,20 +519,7 @@ void Join::Operation() {
     int *attsToKeep;
     int numAttsToKeep = 0, startOfRight = 0, i;
 
-    //get the numAtts for both left input Pipe and right input Pipe using the Schema
-    numAttsLeft = 7;
-    numAttsRight = 5;
-    int size = numAttsLeft + numAttsRight;
-    attsToKeep = (int *) malloc(size * sizeof (int));
-    for (i = 0; i < numAttsLeft; i++) {
-        attsToKeep[i] = i;
-        numAttsToKeep++;
-    }
-    startOfRight = i;
-    for (int k = 0, j = numAttsLeft; k < numAttsRight; k++, j++) {
-        attsToKeep[j] = k;
-        numAttsToKeep++;
-    }
+    
 
     //JOIN OPERATION BEGINS
     int ret_OM = this->j_selOp->GetSortOrders(*om_Left, *om_Right);
@@ -595,6 +582,21 @@ void Join::Operation() {
                             }
                         }
                     }
+                }
+                
+                //get the numAtts for both left input Pipe and right input Pipe using the Schema
+                numAttsLeft = ((int*)lRecord->bits)[1]/sizeof(int)-1;
+                numAttsRight = ((int*)rRecord->bits)[1]/sizeof(int)-1;
+                int size = numAttsLeft + numAttsRight;
+                attsToKeep = (int *) malloc(size * sizeof (int));
+                for (i = 0; i < numAttsLeft; i++) {
+                    attsToKeep[i] = i;
+                    numAttsToKeep++;
+                }
+                startOfRight = i;
+                for (int k = 0, j = numAttsLeft; k < numAttsRight; k++, j++) {
+                    attsToKeep[j] = k;
+                    numAttsToKeep++;
                 }
                 blnFirst = false;
             }
@@ -785,9 +787,11 @@ void Join::Operation() {
             leftisEmpty = 0;
             rightisEmpty = 0;
         }
-        bigQLeftSorted->ShutDown();
-        bigQRightSorted->ShutDown();
-        (this->j_outPipe)->ShutDown();
+        jn_bqLeft.WaitUntilDone();
+        jn_bqRight.WaitUntilDone();
+        //bigQLeftSorted->ShutDown();
+        //bigQRightSorted->ShutDown();
+        //(this->j_outPipe)->ShutDown();
 
     }//BLOCK NESTED LOOP JOIN BEGINS
     else {
@@ -853,6 +857,7 @@ void Join::Operation() {
         }
 
     }
+    
     (this->j_outPipe)->ShutDown();
 }
 
