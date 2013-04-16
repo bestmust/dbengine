@@ -96,7 +96,7 @@ void Statistics::CopyRel(char *oldName, char *newName)
   for (it = oldAttrs.begin(); it != oldAttrs.end(); it++ )
     {
       string newAttrName(newN+"."+(*it).first); // might need to do this for the schma variables as well.
-      clog << "aliasing " << newAttrName << " to " << newN << endl;
+      //clog << "aliasing " << newAttrName << " to " << newN << endl;
       newR.AddAtt(newAttrName, (*it).second); // add modified attr to new relation
       extantAttrs[newAttrName] = newN; // know where these modified attrs are
     }
@@ -107,7 +107,7 @@ void Statistics::CopyRel(char *oldName, char *newName)
 
 void Statistics::Read(char *fromWhere)
 {
-  clog << endl;
+  //clog << endl;
   using std::ifstream;
   ifstream statFile(fromWhere);
 
@@ -221,7 +221,7 @@ void Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoi
   CheckRelations(relNames, numToJoin);
   std::vector <std::string> attrs = CheckParseTree(parseTree);
   // if we actually return, the parse tree is good
-  std::clog << "*** GOOD PARSE TREE!!! ***" << std::endl;
+  //clog << "*** GOOD PARSE TREE!!! ***" << std::endl;
   double estimate = 0;
   if (0 == parseTree and 2 >= numToJoin)
     {
@@ -246,7 +246,7 @@ void Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoi
           string rel(relNames[i]);
           newRelation += rel;
         }
-      clog << "new relation is " << newRelation << endl;
+      //clog << "new relation is " << newRelation << endl;
       // new map, to have both relations merged into it.
       RelationInformation merged(estimate,newRelation); // new relation with estimated
 
@@ -254,7 +254,7 @@ void Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoi
         {
           merged.CopyAtts(rels[relNames[i]]);
         }
-      clog << "printing merged relations " << endl << endl;
+      //clog << "printing merged relations " << endl << endl;
       merged.print();
       rels[newRelation] = merged;
 
@@ -285,7 +285,7 @@ void Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoi
       for (it = mergedAtts.begin(); it != mergedAtts.end(); it++ )
         {
           extantAttrs[(*it).first] = newRelation;
-          clog << (*it).first << "now belongs to " << newRelation << endl;
+          //clog << (*it).first << "now belongs to " << newRelation << endl;
         }
     }
 
@@ -315,7 +315,7 @@ void Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoi
   // Finally, note that you will never be asked to write or to read from disk
   // a Statistics object for which Apply has been called. That is, you will
   // always write or read an object having only singleton relations.
-  clog << endl << endl << "****************" << estimate << "******************" << endl << endl;
+  //clog << endl << endl << "****************" << estimate << "******************" << endl << endl;
 }
 
 double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin)
@@ -331,17 +331,17 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
       return accumulator;
     }
 
-  using std::clog; using std::cout; using std::endl;
+  //using std::clog; using std::cout; using std::endl;
   CheckRelations(relNames, numToJoin);
   std::vector <std::string> attrs = CheckParseTree(parseTree);
   // if we actually return, the parse tree is good
-  std::clog << "*** GOOD PARSE TREE!!! ***" << std::endl;
+  //clog << "*** GOOD PARSE TREE!!! ***" << std::endl;
 
-  clog << attrs.size() << endl;
+  //clog << attrs.size() << endl;
 
   for (unsigned int i = 0; i < attrs.size(); i++)
     {
-      clog << attrs[i] << endl;
+      //clog << attrs[i] << endl;
     }
 
   // new map, to have both relations merged into it.
@@ -356,7 +356,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
   // from the number of tuples in relations
 
   double result = CalculateEstimate(parseTree);
-  clog << "estimated result is " << result << endl;
+  //clog << "estimated result is " << result << endl;
   return result;
 }
 
@@ -365,31 +365,31 @@ void Statistics :: Check (struct AndList *parseTree, char *relNames[], int numTo
   CheckRelations(relNames, numToJoin);
   CheckParseTree(parseTree);
   // if we actually return, the parse tree is good
-  std::clog << "*** GOOD PARSE TREE!!! ***" << std::endl;
+  //clog << "*** GOOD PARSE TREE!!! ***" << std::endl;
   return;
 }
 
 void Statistics :: CheckRelations(char *relNames[], int numToJoin)
 {
-  using std::string;
-  using std::clog;
-  using std::endl;
+  //using std::string;
+  //using std::clog;
+  //using std::endl;
 
   for (int i = 0; i < numToJoin; i++)
     {
       string rel(relNames[i]);
       // try for a singleton relation &
       // try for a merged relation
-      clog << "looking for rel " << rel << endl;
-      clog << "single rel count" << rels.count(rel) << endl;
-      clog << "merged rel count" << mergedRelations.count(rel) << endl;
+      //clog << "looking for rel " << rel << endl;
+      //clog << "single rel count" << rels.count(rel) << endl;
+      //clog << "merged rel count" << mergedRelations.count(rel) << endl;
       if (0 == rels.count(rel) and 0 == mergedRelations.count(rel))
         {
           clog << "relation " << rel << " not found in internal relation tracker" << endl;
           exit(-1);
         }
     }
-  clog << "found all relations, .... now checking for all attrs in parsetree" << endl;
+  //clog << "found all relations, .... now checking for all attrs in parsetree" << endl;
 }
 
 // returns a vector of the attrs
@@ -453,7 +453,7 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
       OrList *pOr = pAnd->left;
       bool independentORs = true; // assume independence
       bool singleOR = false;
-      clog << "singleOr is " << singleOR << endl;
+      //clog << "singleOr is " << singleOR << endl;
       { // but check
         std::set <string> ors;
         unsigned count = 0;
@@ -462,11 +462,11 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
             ComparisonOp *pCom = pOr->left;
             if (pCom!=NULL)
               {
-                clog << count;
+                //clog << count;
                 count++;
                 string attr(pOr->left->left->value);
-                clog << "orattr is " << attr << endl;
-                clog << "or.size is " << ors.size() << endl;
+                //clog << "orattr is " << attr << endl;
+                //clog << "or.size is " << ors.size() << endl;
                 ors.insert(attr);
               }
             pOr = pOr->rightOr;
@@ -474,14 +474,15 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
         if (ors.size() != count)
           {independentORs = false;}
         if (1 == count)
-          {independentORs = false; clog << "singleOr is " << singleOR << endl; singleOR = true; clog << "singleOr is " << singleOR << endl; clog << "THERE IS A SINGLE OR" << endl; clog << "singleOr is " << singleOR << endl;}
-        clog << " ors are ";
-        if(independentORs)
-          clog << "independent" << endl;
-        else
-          clog << "dependent" << endl;
+          {independentORs = false;// clog << "singleOr is " << singleOR << endl; singleOR = true; clog << "singleOr is " << singleOR << endl; clog << "THERE IS A SINGLE OR" << endl; clog << "singleOr is " << singleOR << endl;
+        }
+        //clog << " ors are ";
+       // if(independentORs)
+       //   clog << "independent" << endl;
+       // else
+       //   clog << "dependent" << endl;
       }
-      clog << "singleOr is " << singleOR << endl;
+     // clog << "singleOr is " << singleOR << endl;
       pOr = pAnd->left; // reset pointer
       double tempOrValue = 0.0l; // each or is calculated separately, and then multiplied in at the end.
       if(independentORs)
@@ -505,7 +506,7 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
                     if ((0 != lOperand and (NAME == lOperand->code)) and
                         (0 != rOperand and (NAME == rOperand->code)))
                       {// this is a join, because both the left and right are attribute names
-                        clog << endl << "join case estimation" << endl << endl;
+                        //clog << endl << "join case estimation" << endl << endl;
                         seenJoin = true;
                         string const lattr(lOperand->value);
                         string const rattr(rOperand->value);
@@ -522,24 +523,24 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
                         // get number of Distinct values of R attr
                         int const rDistinct = rels[rrel].GetDistinct(rattr);
 
-                        clog << "lr = " << lRelSize << " rr = " << rRelSize << endl;
-                        clog << "product is " << ((double)lRelSize * (double)rRelSize) << endl;
+                        //clog << "lr = " << lRelSize << " rr = " << rRelSize << endl;
+                        //clog << "product is " << ((double)lRelSize * (double)rRelSize) << endl;
 
                         double numerator = lRelSize * rRelSize;
                         double denominator = std::max(lDistinct,rDistinct);
 
-                        clog << "lattr of " << lattr << " with " << lDistinct <<" distinct values is "
-                             << "found in rel " << lrel << " of size " << lRelSize << endl;
-                        clog << "rattr of " << rattr << " with " << rDistinct <<" distinct values is "
-                             << "Found in rel " << rrel << " of size " << rRelSize << endl;
+                        //clog << "lattr of " << lattr << " with " << lDistinct <<" distinct values is "
+                        //     << "found in rel " << lrel << " of size " << lRelSize << endl;
+                        //clog << "rattr of " << rattr << " with " << rDistinct <<" distinct values is "
+                        //     << "Found in rel " << rrel << " of size " << rRelSize << endl;
                         tempOrValue += (numerator/denominator);
-                        clog << "numerator is " << numerator
-                             << " denominator is " << denominator
-                             << " with final result of " << tempOrValue << endl << endl;
+                        //clog << "numerator is " << numerator
+                        //     << " denominator is " << denominator
+                        //     << " with final result of " << tempOrValue << endl << endl;
                       }
                     else
                       { // this is a selection // maybe fall through?
-                        clog << endl << "*** EQUALITY SELECTION" << endl;
+                        //clog << endl << "*** EQUALITY SELECTION" << endl;
                         Operand *opnd = 0;
                         Operand *constant = 0;
                         if (NAME == lOperand->code)
@@ -552,12 +553,12 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
                         string const attr(opnd->value);
                         string const relation = extantAttrs[attr];
                         tupleCount const distinct = rels[relation].GetDistinct(attr);
-                        clog << "singleOr is " << singleOR << endl;
+                        //clog << "singleOr is " << singleOR << endl;
                         if (singleOR)
                           {
                             double const calculation = (1.0l/distinct);// (numerator/denominator);
 
-                            clog << "single value is " << calculation << endl;
+                            //clog << "single value is " << calculation << endl;
                             tempOrValue += calculation;
                           }
                         else
@@ -565,7 +566,7 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
                             if(independentORs) // independent ORs
                               {
                                 double const calculation = (1.0l - (1.0l/distinct));
-                                clog << "indep, value is " << calculation << endl;
+                                //clog << "indep, value is " << calculation << endl;
                                 tempOrValue *= calculation;
                               }
                             else // dependent ORs
@@ -573,12 +574,12 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
                                 // else
                                 {
                                   double const calculation = (1.0l/distinct);
-                                  clog << "dep, value is " << calculation << endl;
+                                  //clog << "dep, value is " << calculation << endl;
                                   tempOrValue += calculation;
                                 }
                               }
                           }
-                        clog << "*** EQUALITY SELECTION end with result " << endl << endl;
+                        //clog << "*** EQUALITY SELECTION end with result " << endl << endl;
                       }
                     break;
                   }
@@ -586,7 +587,7 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
                   //break;
                 case GREATER_THAN: // selection
                   // break;
-                  clog << "not equal selection fall through" << endl;
+                  //clog << "not equal selection fall through" << endl;
                   // we are in a selection now.
                   // so either of our operands could be a literal value rather than an attribute
                   Operand *opnd = 0;
@@ -604,13 +605,13 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
                   if(independentORs) // independent ORs
                     {
                       double const calculation = 1.0l - (1.0l)/(3.0l);;
-                      clog << "indep, value is " << calculation << endl;
+                      //clog << "indep, value is " << calculation << endl;
                       tempOrValue *= calculation;
                     }
                   else // dependent ORs
                     {
                       double const calculation = (1.0l)/(3.0l);
-                      clog << "dep, value is " << calculation << endl;
+                      //clog << "dep, value is " << calculation << endl;
                       tempOrValue += calculation;
                     }
                   break;
@@ -659,20 +660,20 @@ double Statistics :: CalculateEstimate(AndList *pAnd)
             }
           pOr = pOr->rightOr; // go to next or
         }
-      clog << "putting ors into and estimate" << endl;
+      //clog << "putting ors into and estimate" << endl;
       if (independentORs)
         {
-          clog << "independent ors" << endl;
-          clog << "before, result was " << result << endl;
+          //clog << "independent ors" << endl;
+          //clog << "before, result was " << result << endl;
           result *= (1 - tempOrValue);
-          clog << "after, result was " << result << endl;
+          //clog << "after, result was " << result << endl;
         }
       else
         {
-          clog << "dependent ors" << endl;
-          clog << "before, result was " << result << endl;
+          //clog << "dependent ors" << endl;
+          //clog << "before, result was " << result << endl;
           result *= tempOrValue;
-          clog << "after, result was " << result << endl;
+          //clog << "after, result was " << result << endl;
         }
       pAnd = pAnd->rightAnd; // go to next and
     }
@@ -693,7 +694,7 @@ bool Statistics :: HasJoin(AndList *pAnd)
       OrList *pOr = pAnd->left;
       bool independentORs = true; // assume independence
       bool singleOR = false;
-      clog << "singleOr is " << singleOR << endl;
+      //clog << "singleOr is " << singleOR << endl;
       { // but check
         std::set <string> ors;
         unsigned count = 0;
@@ -702,11 +703,11 @@ bool Statistics :: HasJoin(AndList *pAnd)
             ComparisonOp *pCom = pOr->left;
             if (pCom!=NULL)
               {
-                clog << count;
+                //clog << count;
                 count++;
                 string attr(pOr->left->left->value);
-                clog << "orattr is " << attr << endl;
-                clog << "or.size is " << ors.size() << endl;
+                //clog << "orattr is " << attr << endl;
+                //clog << "or.size is " << ors.size() << endl;
                 ors.insert(attr);
               }
             pOr = pOr->rightOr;
@@ -714,14 +715,16 @@ bool Statistics :: HasJoin(AndList *pAnd)
         if (ors.size() != count)
           {independentORs = false;}
         if (1 == count)
-          {independentORs = false; clog << "singleOr is " << singleOR << endl; singleOR = true; clog << "singleOr is " << singleOR << endl; clog << "THERE IS A SINGLE OR" << endl; clog << "singleOr is " << singleOR << endl;}
-        clog << " ors are ";
-        if(independentORs)
-          clog << "independent" << endl;
-        else
-          clog << "dependent" << endl;
+          {independentORs = false; //clog << "singleOr is " << singleOR << endl; singleOR = true; clog << "singleOr is " << singleOR << endl; clog << "THERE IS A SINGLE OR" << endl; clog << "singleOr is " << singleOR << endl;
+          
+        }
+        //clog << " ors are ";
+       // if(independentORs)
+         // clog << "independent" << endl;
+       // else
+         // clog << "dependent" << endl;
       }
-      clog << "singleOr is " << singleOR << endl;
+      //clog << "singleOr is " << singleOR << endl;
       pOr = pAnd->left; // reset pointer
       double tempOrValue = 0.0l; // each or is calculated separately, and then multiplied in at the end.
       if(independentORs)
@@ -745,7 +748,7 @@ bool Statistics :: HasJoin(AndList *pAnd)
                     if ((0 != lOperand and (NAME == lOperand->code)) and
                         (0 != rOperand and (NAME == rOperand->code)))
                       {// this is a join, because both the left and right are attribute names
-                        clog << endl << "join case estimation" << endl << endl;
+                        //clog << endl << "join case estimation" << endl << endl;
                         seenJoin = true;
                         string const lattr(lOperand->value);
                         string const rattr(rOperand->value);
@@ -762,24 +765,24 @@ bool Statistics :: HasJoin(AndList *pAnd)
                         // get number of Distinct values of R attr
                         int const rDistinct = rels[rrel].GetDistinct(rattr);
 
-                        clog << "lr = " << lRelSize << " rr = " << rRelSize << endl;
-                        clog << "product is " << ((double)lRelSize * (double)rRelSize) << endl;
+                        //clog << "lr = " << lRelSize << " rr = " << rRelSize << endl;
+                        //clog << "product is " << ((double)lRelSize * (double)rRelSize) << endl;
 
                         double numerator = lRelSize * rRelSize;
                         double denominator = std::max(lDistinct,rDistinct);
 
-                        clog << "lattr of " << lattr << " with " << lDistinct <<" distinct values is "
-                             << "found in rel " << lrel << " of size " << lRelSize << endl;
-                        clog << "rattr of " << rattr << " with " << rDistinct <<" distinct values is "
-                             << "Found in rel " << rrel << " of size " << rRelSize << endl;
+                        //clog << "lattr of " << lattr << " with " << lDistinct <<" distinct values is "
+                         //    << "found in rel " << lrel << " of size " << lRelSize << endl;
+                        //clog << "rattr of " << rattr << " with " << rDistinct <<" distinct values is "
+                        //     << "Found in rel " << rrel << " of size " << rRelSize << endl;
                         tempOrValue += (numerator/denominator);
-                        clog << "numerator is " << numerator
-                             << " denominator is " << denominator
-                             << " with final result of " << tempOrValue << endl << endl;
+                        //clog << "numerator is " << numerator
+                          //   << " denominator is " << denominator
+                            // << " with final result of " << tempOrValue << endl << endl;
                       }
                     else
                       { // this is a selection // maybe fall through?
-                        clog << endl << "*** EQUALITY SELECTION" << endl;
+                        //clog << endl << "*** EQUALITY SELECTION" << endl;
                         Operand *opnd = 0;
                         Operand *constant = 0;
                         if (NAME == lOperand->code)
@@ -792,12 +795,12 @@ bool Statistics :: HasJoin(AndList *pAnd)
                         string const attr(opnd->value);
                         string const relation = extantAttrs[attr];
                         tupleCount const distinct = rels[relation].GetDistinct(attr);
-                        clog << "singleOr is " << singleOR << endl;
+                        //clog << "singleOr is " << singleOR << endl;
                         if (singleOR)
                           {
                             double const calculation = (1.0l/distinct);// (numerator/denominator);
 
-                            clog << "single value is " << calculation << endl;
+                            //clog << "single value is " << calculation << endl;
                             tempOrValue += calculation;
                           }
                         else
@@ -805,7 +808,7 @@ bool Statistics :: HasJoin(AndList *pAnd)
                             if(independentORs) // independent ORs
                               {
                                 double const calculation = (1.0l - (1.0l/distinct));
-                                clog << "indep, value is " << calculation << endl;
+                                //clog << "indep, value is " << calculation << endl;
                                 tempOrValue *= calculation;
                               }
                             else // dependent ORs
@@ -813,12 +816,12 @@ bool Statistics :: HasJoin(AndList *pAnd)
                                 // else
                                 {
                                   double const calculation = (1.0l/distinct);
-                                  clog << "dep, value is " << calculation << endl;
+                                  //clog << "dep, value is " << calculation << endl;
                                   tempOrValue += calculation;
                                 }
                               }
                           }
-                        clog << "*** EQUALITY SELECTION end with result " << endl << endl;
+                        //clog << "*** EQUALITY SELECTION end with result " << endl << endl;
                       }
                     break;
                   }
@@ -826,7 +829,7 @@ bool Statistics :: HasJoin(AndList *pAnd)
                   //break;
                 case GREATER_THAN: // selection
                   // break;
-                  clog << "not equal selection fall through" << endl;
+                  //clog << "not equal selection fall through" << endl;
                   // we are in a selection now.
                   // so either of our operands could be a literal value rather than an attribute
                   Operand *opnd = 0;
@@ -844,13 +847,13 @@ bool Statistics :: HasJoin(AndList *pAnd)
                   if(independentORs) // independent ORs
                     {
                       double const calculation = 1.0l - (1.0l)/(3.0l);;
-                      clog << "indep, value is " << calculation << endl;
+                      //clog << "indep, value is " << calculation << endl;
                       tempOrValue *= calculation;
                     }
                   else // dependent ORs
                     {
                       double const calculation = (1.0l)/(3.0l);
-                      clog << "dep, value is " << calculation << endl;
+                      //clog << "dep, value is " << calculation << endl;
                       tempOrValue += calculation;
                     }
                   break;
@@ -899,20 +902,20 @@ bool Statistics :: HasJoin(AndList *pAnd)
             }
           pOr = pOr->rightOr; // go to next or
         }
-      clog << "putting ors into and estimate" << endl;
+      //clog << "putting ors into and estimate" << endl;
       if (independentORs)
         {
-          clog << "independent ors" << endl;
-          clog << "before, result was " << result << endl;
+          //clog << "independent ors" << endl;
+          //clog << "before, result was " << result << endl;
           result *= (1 - tempOrValue);
-          clog << "after, result was " << result << endl;
+          //clog << "after, result was " << result << endl;
         }
       else
         {
-          clog << "dependent ors" << endl;
-          clog << "before, result was " << result << endl;
+          //clog << "dependent ors" << endl;
+          //clog << "before, result was " << result << endl;
           result *= tempOrValue;
-          clog << "after, result was " << result << endl;
+          //clog << "after, result was " << result << endl;
         }
       pAnd = pAnd->rightAnd; // go to next and
     }

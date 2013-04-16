@@ -143,45 +143,45 @@ void q0 (){
 
   s.AddRel(relName[1],800000);
   s.AddAtt(relName[1], "ps_suppkey", 10000);
-  cout << "both s and ps added" << endl;
+  //cout << "both s and ps added" << endl;
   char *cnf = "(s_suppkey = ps_suppkey)";
   //
   yy_scan_string(cnf);
   yyparse();
-  PrintAndList(final);
-  cout << endl << "prev was andlist" << endl;
-  PrintParseTree(final);
-  cout << endl << "prev was andlist" << endl;
+  //PrintAndList(final);
+  //cout << endl << "prev was andlist" << endl;
+  //PrintParseTree(final);
+  //cout << endl << "prev was andlist" << endl;
   double result = s.Estimate(final, relName, 2);
-  clog << "after estimate, with estimate of " << result << endl;
-  cout << "estimate should be : 800000" << endl;
+  //clog << "after estimate, with estimate of " << result << endl;
+  //cout << "estimate should be : 800000" << endl;
   if (result != 800000.0l)
     cerr<<"error in estimating Q0 before apply " << endl;
 
   s.Apply(final, relName, 2);
 
   // test write and read
-  clog << "writing stat to file" << endl;
+  //clog << "writing stat to file" << endl;
   s.Write(fileName);
-  s.print();
+  //s.print();
 
   //reload the statistics object from file
   Statistics s1;
-  clog << "reading stat from file" << endl;
+  //clog << "reading stat from file" << endl;
   s1.Read(fileName);
-  clog << "printing stat from read" << endl;
-  s1.print();
+  //clog << "printing stat from read" << endl;
+  //s1.print();
   // assert(0);
   cnf = "(s_suppkey>1000)";
   yy_scan_string(cnf);
   yyparse();
   double dummy = s1.Estimate(final, relName, 2);
 
-  clog << "after first estimate, with estimate of " << result << endl;
-  cout << " first estimate should be : 800000" << endl;
+  //clog << "after first estimate, with estimate of " << result << endl;
+  //cout << " first estimate should be : 800000" << endl;
 
-  clog << "second estimate out was " << dummy << endl;
-  cout << "second estimate should be " << result/3.0 << endl;
+  //clog << "second estimate out was " << dummy << endl;
+  //cout << "second estimate should be " << result/3.0 << endl;
   if(fabs(dummy*3.0-result) >0.1)
     {
       cout<<"Read or write or last apply is not correct\n";
@@ -208,10 +208,10 @@ void q1 () // pure select
   yy_scan_string(cnf);
   yyparse();
 
-  PrintAndList(final);
-  cout << endl << "prev was andlist" << endl;
-  PrintParseTree(final);
-  cout << endl << "prev was parsetree" << endl;
+  //PrintAndList(final);
+  //cout << endl << "prev was andlist" << endl;
+  //PrintParseTree(final);
+  //cout << endl << "prev was parsetree" << endl;
 
   double result = s.Estimate(final, relName, 1);
   cout<<"Your estimation Result " << scientific << result << endl;
@@ -223,9 +223,9 @@ void q1 () // pure select
   // test write and read
   s.Write(fileName);
 
-  cout<<"Your estimation Result " << scientific << result << endl;
-  cout<<" Correct Answer: 8.5732e+5" << endl;
-  cerr << "" << endl;
+  //cout<<"Your estimation Result " << scientific << result << endl;
+  //cout<<" Correct Answer: 8.5732e+5" << endl;
+  //cerr << "" << endl;
 }
 
 void q2 (){
@@ -270,8 +270,8 @@ void q2 (){
   cout<<"Your estimation Result " << result << endl;
   cout<<" Correct Answer: 1500000" << endl;
   cerr << "" << endl;
-
-
+  
+  
 }
 
 // Note there is a self join
